@@ -214,10 +214,19 @@ class ZipArchiveCreatorGUI:
         # Create
         wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type)
         self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
+        self._add_source_to_workflow(wflow)
+
+        wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
 
         # Validate
         wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type)
         self.frame_validate.set_workflow(wflow, data_holder.data_type)
+        self._add_source_to_workflow(wflow)
+
+        wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
+
+    def _add_source_to_workflow(self, wflow: workflow.SHARKadmWorkflow):
+        pass
 
     def _add_controls_to_save(self):
         pass

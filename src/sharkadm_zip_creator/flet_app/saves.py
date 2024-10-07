@@ -11,7 +11,7 @@ USER_DIR.mkdir(parents=True, exist_ok=True)
 class CreatorSaves:
     def __init__(self):
         self._env: str = 'test'
-        self._controls = {}
+        self._controls: dict[str, ft.Control] = {}
 
     def set_env(self, env: str) -> None:
         env = env.strip().upper()
@@ -32,38 +32,41 @@ class CreatorSaves:
         return present
 
     @property
-    def save_path(self):
+    def save_path(self) -> pathlib.Path:
         return pathlib.Path(USER_DIR, f'zip_archive_creator_saves_{self._env}.yaml').resolve()
 
     @property
-    def valid_save_paths(self):
+    def valid_save_paths(self) -> list[pathlib.Path]:
         return [pathlib.Path(USER_DIR, f'zip_archive_creator_saves_{env}.yaml') for env in self.envs]
 
-    def add_control(self, name: str, control: ft.Control):
+    def add_control(self, name: str, control: ft.Control) -> None:
         self._controls[name] = control
 
-    def export_saves(self):
+    def export_saves(self) -> None:
         data = {}
         for key, cont in self._controls.items():
             data[key] = cont.value
         with open(self.save_path, 'w') as fid:
             yaml.safe_dump(data, fid)
 
-    def import_saves(self, parent: ft.Control):
+    def import_saves(self, parent: ft.Control) -> None:
         self._clear_all_fields(parent)
         if not self.save_path.exists():
             return
         with open(self.save_path) as fid:
             data = yaml.safe_load(fid)
         for key, value in data.items():
-            parts = key.split('.')
-            if not hasattr(parent, parts[0]):
+            # parts = key.split('.')
+            # if not hasattr(parent, parts[0]):
+            #     continue
+            # attr = getattr(parent, parts[0])
+            # for part in parts[1:]:
+            #     if not hasattr(attr, part):
+            #         continue
+            #     attr = getattr(attr, part)
+            if not hasattr(parent, key):
                 continue
-            attr = getattr(parent, parts[0])
-            for part in parts[1:]:
-                if not hasattr(attr, part):
-                    continue
-                attr = getattr(attr, part)
+            attr = getattr(parent, key)
             attr.value = value
             attr.update()
 

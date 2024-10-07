@@ -37,7 +37,8 @@ class FrameSource(ft.Row):
                         icon=ft.icons.UPLOAD_FILE,
                         on_click=lambda _: pick_source_file_dialog.pick_files(
                             allow_multiple=False,
-                            allowed_extensions=['xlsx']
+                            allowed_extensions=['xlsx'],
+                            dialog_title='Välj en datakälla från FIL'
                         ))
 
         row = ft.Row(
@@ -53,10 +54,10 @@ class FrameSource(ft.Row):
 
         self.main_app.page.overlay.append(pick_source_directory_dialog)
         self._pick_config_directory_button = ft.ElevatedButton(
-                        "Välj en datakälla från mapp",
+                        "Välj en datakälla från MAPP",
                         icon=ft.icons.UPLOAD_FILE,
                         on_click=lambda _: pick_source_directory_dialog.get_directory_path(
-                            dialog_title='Välj en källmapp',
+                            dialog_title='Välj en datakälla från MAPP',
                             # initial_directory=None
                         ))
 

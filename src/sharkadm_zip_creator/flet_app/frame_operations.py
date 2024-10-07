@@ -8,7 +8,7 @@ TEXT_SIZE_LABEL_1 = 20
 TEXT_SIZE_LABEL_2 = 16
 
 
-class FrameOperator(ft.Row):
+class FrameOperators(ft.Row):
 
     def __init__(self, main_app):
         super().__init__()
