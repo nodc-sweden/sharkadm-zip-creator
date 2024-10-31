@@ -16,8 +16,11 @@ class FrameValidate(ft.Column):
 
         self.controls.append(self.frame_operators)
         self.controls.append(self.frame_options)
-        self.controls.append(ft.ElevatedButton('Validera'))
+        self.controls.append(ft.ElevatedButton('Validera', on_click=self._on_validate))
 
     def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
         self._workflow = wflow
         self.frame_operators.set_workflow(wflow, data_type)
+
+    def _on_validate(self, e):
+        pass

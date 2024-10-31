@@ -68,8 +68,10 @@ class FrameConfig(ft.Row):
             self._env_dropdown.value = 'TEST'
 
         self._trigger_btn = ft.ElevatedButton(text='Trigga import', on_click=self.main_app.trigger_import, bgcolor='green')
+        self._update_config_files_btn = ft.ElevatedButton(text='Uppdatera listor', on_click=self.main_app.update_lists)
 
         return ft.Column([
+            self._update_config_files_btn,
             self._get_import_config_button(),
             self._env_dropdown,
             self._trigger_btn

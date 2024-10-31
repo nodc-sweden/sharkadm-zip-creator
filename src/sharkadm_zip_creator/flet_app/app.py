@@ -3,6 +3,7 @@ import pathlib
 import time
 
 import flet as ft
+import nodc_codes
 import sharkadm
 from sharkadm import event
 from sharkadm import workflow
@@ -54,8 +55,9 @@ class ZipArchiveCreatorGUI:
     def main(self, page: ft.Page):
         self.page = page
         self.page.title = 'Zip archive creator'
-        self.page.window_height = 1200
-        self.page.window_width = 2000
+        self.page.window_height = 900
+        self.page.window_width = 1700
+        self.page.theme_mode = ft.ThemeMode.LIGHT
         self._build()
         self._add_controls_to_save()
         creator_saves.import_saves(self)
@@ -112,6 +114,9 @@ class ZipArchiveCreatorGUI:
         self.page.controls.append(self._tabs)
         self.page.controls.append(self._info_text)
         self.update_page()
+
+    def update_lists(self) -> None:
+        nodc_codes.update_config_files()
 
     def trigger_import(self, *args, on_remove=False):
         if not (self.frame_config.trigger_url and self.frame_config.status_url):
@@ -199,8 +204,14 @@ class ZipArchiveCreatorGUI:
         self._dlg.open = True
         self.update_page()
 
-    def _on_log_workflow(self, msg: str) -> None:
-        self.show_info(msg)
+    def _on_log_workflow(self, data: dict) -> None:
+        level = data.get('level')
+        if level == 'debug':
+            return
+        if level in ['warning', 'error']:
+            level = level.upper()
+        text = f'{level}: {data.get("msg")}'
+        self.show_info(text)
 
     def show_info(self, msg: str = '') -> None:
         self._add_to_log_file(msg)
@@ -210,11 +221,13 @@ class ZipArchiveCreatorGUI:
 
     def update_source(self, path: str) -> None:
         data_holder = sharkadm.get_data_holder(path)
+        self.show_info('Data holder loaded')
 
         # Create
         wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type)
         self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
         self._add_source_to_workflow(wflow)
+        self.show_info('Workflow for creation is set up')
 
         wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
 
@@ -222,11 +235,16 @@ class ZipArchiveCreatorGUI:
         wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type)
         self.frame_validate.set_workflow(wflow, data_holder.data_type)
         self._add_source_to_workflow(wflow)
+        self.show_info('Workflow for validation is set up')
 
         wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
 
     def _add_source_to_workflow(self, wflow: workflow.SHARKadmWorkflow):
-        pass
+        path = self.frame_source.source_path
+        if not path:
+            wflow.set_data_sources()
+        else:
+            wflow.set_data_sources(path)
 
     def _add_controls_to_save(self):
         pass

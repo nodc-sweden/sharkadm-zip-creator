@@ -67,6 +67,16 @@ class FrameOperators(ft.Row):
                     ft.Text(desc),
                     ft.Text(f'({name})')
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
+
+        descriptions = wflow.get_exporter_descriptions()
+        if descriptions:
+            self.lv.controls.append(ft.Divider())
+            self.lv.controls.append(ft.Text('Exporter', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
+            for name, desc in descriptions.items():
+                self.lv.controls.append(ft.Row([
+                    ft.Text(desc),
+                    ft.Text(f'({name})')
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
         self.lv.update()
 
 

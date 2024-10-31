@@ -4,18 +4,17 @@ from sharkadm import utils as sharkadm_utils
 from sharkadm_zip_creator.flet_app import constants
 
 
-class FrameExportOptions(ft.Container):
+class FrameExportOptions(ft.Row):
 
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app
 
-        row = ft.Row([
+        self.controls = [
             self._get_workflow_container(),
             self._get_post_workflow_container(),
-            ])
-        self.content = row
-        self.bgcolor = constants.COLOR_EXPORT_OPTIONS_PRIMARY
+            ]
+        # self.bgcolor = constants.COLOR_EXPORT_OPTIONS_PRIMARY
         self.expand = True
 
     @property
@@ -27,24 +26,31 @@ class FrameExportOptions(ft.Container):
         return self._wf_cb_open_html_map.value
 
     def _get_workflow_container(self) -> ft.Container:
-        col = ft.Column([ft.Text('Alternativ')])
         self._wf_cb_run_qc = ft.Checkbox('Utför automatisk kvalitetskontroll', check_color=constants.COLOR_EXPORT_OPTIONS_CHECKED)
         self._wf_cb_open_html_map = ft.Checkbox('Visa html-karta', check_color=constants.COLOR_EXPORT_OPTIONS_CHECKED)
 
-        col.controls = [
+        col = ft.Column([
+            ft.Text('Alternativ under körning'),
             self._wf_cb_run_qc,
             self._wf_cb_open_html_map
-        ]
+        ])
 
         return ft.Container(
             content=col,
-            bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY
+            bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY,
+            border_radius=20,
+            padding=10
         )
 
     def _get_post_workflow_container(self) -> ft.Container:
-        row = ft.Row([ft.Text('lkasjföda')])
+        col = ft.Column([
+            ft.Text('Alternativ efter körning'),
+            ft.ElevatedButton('Öppna HTML-karta')
+        ])
 
         return ft.Container(
-            content=row,
-            bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY
+            content=col,
+            bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY,
+            border_radius=20,
+            padding=10
         )

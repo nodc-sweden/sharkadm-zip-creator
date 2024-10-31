@@ -1,3 +1,5 @@
+import pathlib
+
 import flet as ft
 
 
@@ -81,6 +83,12 @@ class FrameSource(ft.Row):
     def _set_source_path(self, path: str = None) -> None:
         self._source_path.value = path
         self.main_app.update_source(path)
+
+    @property
+    def source_path(self) -> pathlib.Path | None:
+        if not self._source_path.value:
+            return None
+        return pathlib.Path(self._source_path.value)
 
 
 

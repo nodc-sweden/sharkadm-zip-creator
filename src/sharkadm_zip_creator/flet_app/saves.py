@@ -56,14 +56,6 @@ class CreatorSaves:
         with open(self.save_path) as fid:
             data = yaml.safe_load(fid)
         for key, value in data.items():
-            # parts = key.split('.')
-            # if not hasattr(parent, parts[0]):
-            #     continue
-            # attr = getattr(parent, parts[0])
-            # for part in parts[1:]:
-            #     if not hasattr(attr, part):
-            #         continue
-            #     attr = getattr(attr, part)
             if not hasattr(parent, key):
                 continue
             attr = getattr(parent, key)
@@ -72,14 +64,9 @@ class CreatorSaves:
 
     def _clear_all_fields(self, parent: ft.Control) -> None:
         for key, value in self._controls.items():
-            parts = key.split('.')
-            if not hasattr(parent, parts[0]):
+            if not hasattr(parent, key):
                 continue
-            attr = getattr(parent, parts[0])
-            for part in parts[1:]:
-                if not hasattr(attr, part):
-                    continue
-                attr = getattr(attr, part)
+            attr = getattr(parent, key)
             attr.value = ''
             attr.update()
 
