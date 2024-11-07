@@ -5,7 +5,7 @@ import flet as ft
 from sharkadm import utils as sharkadm_utils
 
 from sharkadm_zip_creator.flet_app.constants import COLOR_CONFIG_MAIN, COLOR_DATASETS_MAIN
-from sharkadm_zip_creator.flet_app.saves import creator_saves
+from sharkadm_zip_creator.flet_app.saves import config_saves
 
 
 class FrameConfig(ft.Row):
@@ -21,6 +21,9 @@ class FrameConfig(ft.Row):
         ]))
 
         self._add_controls_to_save()
+
+    def update_frame(self):
+        config_saves.import_saves(self)
 
     @property
     def env(self):
@@ -55,7 +58,7 @@ class FrameConfig(ft.Row):
 
     def _set_dropdown_options(self) -> None:
         """Only sets options that have present config files"""
-        self._env_dropdown.options = [ft.dropdown.Option(value) for value in creator_saves.present_envs]
+        self._env_dropdown.options = [ft.dropdown.Option(value) for value in config_saves.present_envs]
 
     def _get_option_column(self) -> ft.Column:
         self._env_dropdown = ft.Dropdown(
@@ -64,7 +67,7 @@ class FrameConfig(ft.Row):
         )
         self._set_dropdown_options()
 
-        if 'TEST' in creator_saves.present_envs:
+        if 'TEST' in config_saves.present_envs:
             self._env_dropdown.value = 'TEST'
 
         self._trigger_btn = ft.ElevatedButton(text='Trigga import', on_click=self.main_app.trigger_import, bgcolor='green')
@@ -224,7 +227,7 @@ class FrameConfig(ft.Row):
             return
         valid_paths = []
         invalid_paths = []
-        valid_mapping = dict((path.stem.lower(), path) for path in creator_saves.valid_save_paths)
+        valid_mapping = dict((path.stem.lower(), path) for path in config_saves.valid_save_paths)
         for file in e.files:
             source_path = pathlib.Path(file.path)
             if not valid_mapping.get(source_path.stem.lower()):
@@ -293,8 +296,8 @@ class FrameConfig(ft.Row):
         self._dynamic_variable_paths_column.update()
         self._trigger_btn.update()
 
-        creator_saves.set_env(value)
-        creator_saves.import_saves(self)
+        config_saves.set_env(value)
+        config_saves.import_saves(self)
         self.check_paths()
         self.show_env_message()
 
@@ -313,13 +316,13 @@ class FrameConfig(ft.Row):
 
     def _add_controls_to_save(self):
 
-        creator_saves.add_control('_trigger_url', self._trigger_url)
-        creator_saves.add_control('_status_url', self._status_url)
+        config_saves.add_control('_trigger_url', self._trigger_url)
+        config_saves.add_control('_status_url', self._status_url)
 
-        creator_saves.add_control('_datasets_directory', self._datasets_directory)
-        creator_saves.add_control('_zip_directory', self._zip_directory)
-        creator_saves.add_control('_config_directory', self._config_directory)
+        config_saves.add_control('_datasets_directory', self._datasets_directory)
+        config_saves.add_control('_zip_directory', self._zip_directory)
+        config_saves.add_control('_config_directory', self._config_directory)
 
-        creator_saves.add_control('_datasets_directory_dynamic', self._datasets_directory_dynamic)
-        creator_saves.add_control('_zip_directory_dynamic', self._zip_directory_dynamic)
-        creator_saves.add_control('_config_directory_dynamic', self._config_directory_dynamic)
+        config_saves.add_control('_datasets_directory_dynamic', self._datasets_directory_dynamic)
+        config_saves.add_control('_zip_directory_dynamic', self._zip_directory_dynamic)
+        config_saves.add_control('_config_directory_dynamic', self._config_directory_dynamic)

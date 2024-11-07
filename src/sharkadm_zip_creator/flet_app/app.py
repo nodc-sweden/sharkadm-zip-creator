@@ -16,7 +16,7 @@ USER_DIR = utils.USER_DIR
 SAVES_PATH = utils.SAVES_PATH
 from sharkadm_zip_creator.flet_app import constants
 
-from sharkadm_zip_creator.flet_app.saves import creator_saves
+from sharkadm_zip_creator.flet_app.saves import config_saves
 from sharkadm_zip_creator.archive_remover import ArchiveRemover
 
 from sharkadm_zip_creator.flet_app.frame_config import FrameConfig
@@ -44,6 +44,10 @@ class ZipArchiveCreatorGUI:
     def log_file_path(self) -> pathlib.Path:
         return USER_DIR / 'zip_creator_log.txt'
 
+    @property
+    def zip_directory(self) -> str:
+        return self.frame_config.zip_directory
+
     def _remove_log_file(self):
         if self.log_file_path.exists():
             os.remove(self.log_file_path)
@@ -60,12 +64,33 @@ class ZipArchiveCreatorGUI:
         self.page.theme_mode = ft.ThemeMode.LIGHT
         self._build()
         self._add_controls_to_save()
-        creator_saves.import_saves(self)
+        self.import_user_saves()
+        config_saves.import_saves(self)
         self.frame_config.show_env_message()
         # self.frame_config.check_paths()
 
     def update_page(self):
         self.page.update()
+
+    def disable_frames(self):
+        self.frame_create_zip.disabled = True
+        self.frame_validate.disabled = True
+        self.frame_source.disabled = True
+        self.frame_config.disabled = True
+        self._update_frames()
+
+    def enable_frames(self):
+        self.frame_create_zip.disabled = False
+        self.frame_validate.disabled = False
+        self.frame_source.disabled = False
+        self.frame_config.disabled = False
+        self._update_frames()
+
+    def _update_frames(self):
+        self.frame_create_zip.update()
+        self.frame_validate.update()
+        self.frame_source.update()
+        self.frame_config.update()
 
     def _build(self):
         self._dialog_text = ft.Text()
@@ -87,14 +112,14 @@ class ZipArchiveCreatorGUI:
             animation_duration=300,
             tabs=[
                 ft.Tab(
-                    text="Skapa ZIP-paket",
-                    icon=ft.icons.FOLDER_ZIP,
-                    content=self.frame_create_zip,
-                ),
-                ft.Tab(
                     text="Validera",
                     icon=ft.icons.CHECKLIST,
                     content=self.frame_validate,
+                ),
+                ft.Tab(
+                    text="Skapa ZIP-paket",
+                    icon=ft.icons.FOLDER_ZIP,
+                    content=self.frame_create_zip,
                 ),
                 ft.Tab(
                     text="Log",
@@ -176,24 +201,6 @@ class ZipArchiveCreatorGUI:
         self._enable_on_trigger_import()
         self.show_info(f'Importen/borttagningen är klar!')
 
-    # def _disable_on_trigger_import(self):
-    #     self._tabs_info.disabled = True
-    #     self._tabs_info.update()
-    #     self._trigger_btn.disabled = True
-    #     self._trigger_btn.update()
-    #     if hasattr(self, '_trigger_dlg'):
-    #         self._trigger_dlg.disabled = True
-    #         self._trigger_dlg.update()
-    #
-    # def _enable_on_trigger_import(self):
-    #     self._tabs_info.disabled = False
-    #     self._tabs_info.update()
-    #     self._trigger_btn.disabled = False
-    #     self._trigger_btn.update()
-    #     if hasattr(self, '_trigger_dlg'):
-    #         self._trigger_dlg.disabled = False
-    #         self._trigger_dlg.update()
-
     def show_dialog(self, text: str):
         self.show_info(text)
         self._dialog_text.value = text
@@ -219,25 +226,33 @@ class ZipArchiveCreatorGUI:
         self._info_text.value = msg
         self._info_text.update()
 
-    def update_source(self, path: str) -> None:
-        data_holder = sharkadm.get_data_holder(path)
-        self.show_info('Data holder loaded')
+    def update_source(self, path: str, update_latest_source: bool = True) -> None:
+        try:
+            self.disable_frames()
 
-        # Create
-        wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type)
-        self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
-        self._add_source_to_workflow(wflow)
-        self.show_info('Workflow for creation is set up')
+            data_holder = sharkadm.get_data_holder(path)
+            self.show_info('Data holder loaded')
 
-        wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
+            # Create
+            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type)
+            self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
+            self._add_source_to_workflow(wflow)
+            self.show_info('Workflow for creation is set up')
 
-        # Validate
-        wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type)
-        self.frame_validate.set_workflow(wflow, data_holder.data_type)
-        self._add_source_to_workflow(wflow)
-        self.show_info('Workflow for validation is set up')
+            wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
 
-        wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
+            # Validate
+            wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type)
+            self.frame_validate.set_workflow(wflow, data_holder.data_type)
+            self._add_source_to_workflow(wflow)
+            self.show_info('Workflow for validation is set up')
+
+            wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
+
+        except Exception:
+            raise
+        finally:
+            self.enable_frames()
 
     def _add_source_to_workflow(self, wflow: workflow.SHARKadmWorkflow):
         path = self.frame_source.source_path
@@ -245,6 +260,11 @@ class ZipArchiveCreatorGUI:
             wflow.set_data_sources()
         else:
             wflow.set_data_sources(path)
+
+    def import_user_saves(self):
+        config_saves.import_saves(self)
+        self.frame_source.import_user_saves()
+
 
     def _add_controls_to_save(self):
         pass

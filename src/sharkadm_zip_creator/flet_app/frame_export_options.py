@@ -1,7 +1,8 @@
 import flet as ft
 from sharkadm_zip_creator.flet_app import utils
-from sharkadm import utils as sharkadm_utils
+from sharkadm import utils as sharkadm_utils, workflow
 from sharkadm_zip_creator.flet_app import constants
+from sharkadm_zip_creator.flet_app import operators
 
 
 class FrameExportOptions(ft.Row):
@@ -9,48 +10,39 @@ class FrameExportOptions(ft.Row):
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app
-
-        self.controls = [
-            self._get_workflow_container(),
-            self._get_post_workflow_container(),
-            ]
-        # self.bgcolor = constants.COLOR_EXPORT_OPTIONS_PRIMARY
         self.expand = True
+        self._workflow_export_widgets = []
 
-    @property
-    def workflow_run_qc(self):
-        return self._wf_cb_run_qc.value
+    def reset(self) -> None:
+        self.controls = []
+        self._workflow_export_widgets = []
 
-    @property
-    def workflow_open_html_map(self):
-        return self._wf_cb_open_html_map.value
+    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
+        self.reset()
+        self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
-    def _get_workflow_container(self) -> ft.Container:
-        self._wf_cb_run_qc = ft.Checkbox('Utför automatisk kvalitetskontroll', check_color=constants.COLOR_EXPORT_OPTIONS_CHECKED)
-        self._wf_cb_open_html_map = ft.Checkbox('Visa html-karta', check_color=constants.COLOR_EXPORT_OPTIONS_CHECKED)
+        wid_list = [
+            ft.Text('Exportalternativ under körning'),
+            ft.Divider(height=9, thickness=3)
+        ]
+        for exp in wflow.exporters:
+            wid = operators.Operator(self.main_app, exp)
+            wid_list.append(wid)
+            wid_list.append(ft.Divider(height=9, thickness=3))
+            self._workflow_export_widgets.append(wid)
 
-        col = ft.Column([
-            ft.Text('Alternativ under körning'),
-            self._wf_cb_run_qc,
-            self._wf_cb_open_html_map
-        ])
-
-        return ft.Container(
-            content=col,
+        self.lv.controls = wid_list
+        self.controls.append(ft.Container(
+            content=self.lv,
             bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY,
             border_radius=20,
-            padding=10
-        )
+            padding=10,
+            expand=True
+        ))
 
-    def _get_post_workflow_container(self) -> ft.Container:
-        col = ft.Column([
-            ft.Text('Alternativ efter körning'),
-            ft.ElevatedButton('Öppna HTML-karta')
-        ])
-
-        return ft.Container(
-            content=col,
-            bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY,
-            border_radius=20,
-            padding=10
-        )
+    @property
+    def workflow_export_options(self) -> list:
+        options = []
+        for wid in self._workflow_export_widgets:
+            options.append(wid.get_info())
+        return options

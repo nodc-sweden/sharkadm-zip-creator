@@ -8,7 +8,7 @@ USER_DIR = utils.get_root_directory() / 'zip_archive_creator'
 USER_DIR.mkdir(parents=True, exist_ok=True)
 
 
-class CreatorSaves:
+class ConfigSaves:
     def __init__(self):
         self._env: str = 'test'
         self._controls: dict[str, ft.Control] = {}
@@ -71,5 +71,46 @@ class CreatorSaves:
             attr.update()
 
 
-creator_saves = CreatorSaves()
+class UserSaves:
+    def __init__(self):
+        self._controls: dict[str, ft.Control] = {}
+
+    @property
+    def save_path(self) -> pathlib.Path:
+        return pathlib.Path(USER_DIR, f'user_saves.yaml').resolve()
+
+    def add_control(self, name: str, control: ft.Control) -> None:
+        self._controls[name] = control
+
+    def export_saves(self) -> None:
+        data = {}
+        for key, cont in self._controls.items():
+            data[key] = cont.value
+        with open(self.save_path, 'w') as fid:
+            yaml.safe_dump(data, fid)
+
+    def import_saves(self, parent: ft.Control) -> None:
+        self._clear_all_fields(parent)
+        if not self.save_path.exists():
+            return
+        with open(self.save_path) as fid:
+            data = yaml.safe_load(fid)
+        for key, value in data.items():
+            if not hasattr(parent, key):
+                continue
+            attr = getattr(parent, key)
+            attr.value = value
+            attr.update()
+
+    def _clear_all_fields(self, parent: ft.Control) -> None:
+        for key, value in self._controls.items():
+            if not hasattr(parent, key):
+                continue
+            attr = getattr(parent, key)
+            attr.value = ''
+            attr.update()
+
+
+config_saves = ConfigSaves()
+user_saves = UserSaves()
 
