@@ -1,4 +1,5 @@
 import pathlib
+from typing import Any
 
 import flet as ft
 import yaml
@@ -73,42 +74,27 @@ class ConfigSaves:
 
 class UserSaves:
     def __init__(self):
-        self._controls: dict[str, ft.Control] = {}
+        self._settings: dict[str, Any] = {}
 
     @property
     def save_path(self) -> pathlib.Path:
         return pathlib.Path(USER_DIR, f'user_saves.yaml').resolve()
 
-    def add_control(self, name: str, control: ft.Control) -> None:
-        self._controls[name] = control
+    def add_settings(self, **kwargs) -> None:
+        self._settings.update(kwargs)
 
     def export_saves(self) -> None:
-        data = {}
-        for key, cont in self._controls.items():
-            data[key] = cont.value
         with open(self.save_path, 'w') as fid:
-            yaml.safe_dump(data, fid)
+            yaml.safe_dump(self._settings, fid)
 
-    def import_saves(self, parent: ft.Control) -> None:
-        self._clear_all_fields(parent)
+    def import_saves(self) -> None:
         if not self.save_path.exists():
             return
         with open(self.save_path) as fid:
-            data = yaml.safe_load(fid)
-        for key, value in data.items():
-            if not hasattr(parent, key):
-                continue
-            attr = getattr(parent, key)
-            attr.value = value
-            attr.update()
+            self._settings = yaml.safe_load(fid)
 
-    def _clear_all_fields(self, parent: ft.Control) -> None:
-        for key, value in self._controls.items():
-            if not hasattr(parent, key):
-                continue
-            attr = getattr(parent, key)
-            attr.value = ''
-            attr.update()
+    def get(self, key: str, default: Any = None) -> None:
+        return self._settings.get(key, default)
 
 
 config_saves = ConfigSaves()

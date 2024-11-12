@@ -34,7 +34,7 @@ class FrameSource(ft.Row):
         col.controls.append(row)
         col.controls.append(path_row)
         self.controls.append(col)
-        self._add_user_saves_widgets()
+        self._add_user_saves()
 
     def _get_latest_source_row(self) -> ft.Row:
         self._btn_load_latest_source = ft.ElevatedButton('Ladda senaste ->', on_click=self._on_load_latest_data_source)
@@ -143,13 +143,14 @@ class FrameSource(ft.Row):
     def _set_latest_source_path(self, path: str):
         self._latest_source_path.value = path
         self._latest_source_path.update()
-        self._btn_load_latest_source
 
-    def _add_user_saves_widgets(self):
-        user_saves.add_control('_latest_source_path', self._latest_source_path)
+    def _add_user_saves(self):
+        user_saves.add_settings(_latest_source_path=self._latest_source_path.value)
 
     def import_user_saves(self):
-        user_saves.import_saves(self)
+        user_saves.import_saves()
+        self._latest_source_path.value = user_saves.get('_latest_source_path', '')
+        self._latest_source_path.update()
 
     def export_user_saves(self):
         user_saves.export_saves()

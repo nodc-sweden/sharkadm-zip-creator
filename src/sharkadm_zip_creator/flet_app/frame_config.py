@@ -40,21 +40,20 @@ class FrameConfig(ft.Row):
     @property
     def datasets_directory(self) -> str:
         if self._static_variable_paths_column.visible:
-            print(f'{type(self._datasets_directory)=}')
-            return self._datasets_directory.value.strip()
-        return self._datasets_directory_dynamic.value.strip()
+            return self._datasets_directory.value
+        return self._datasets_directory_dynamic.value
 
     @property
     def config_directory(self) -> str:
         if self._static_variable_paths_column.visible:
-            return self._config_directory.value.strip()
-        return self._config_directory_dynamic.value.strip()
+            return self._config_directory.value
+        return self._config_directory_dynamic.value
 
     @property
     def zip_directory(self) -> str:
         if self._static_variable_paths_column.visible:
-            return self._zip_directory.value.strip()
-        return self._zip_directory_dynamic.value.strip()
+            return self._zip_directory.value
+        return self._zip_directory_dynamic.value
 
     def _set_dropdown_options(self) -> None:
         """Only sets options that have present config files"""
