@@ -1,0 +1,34 @@
+[project]
+name = "sharkadm-zip-creator"
+version = "0.1.0"
+description = "Flet GUI for creating zip packages for SHARK"
+authors = [
+    {name = "Magnus Wenzer", email = "magnus.wenzer@smhi.se"},
+]
+dependencies = [
+    "flet>=0.24.1",
+    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git",
+    "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes.git",
+    "nodc-worms @ git+https://github.com/nodc-sweden/nodc-worms.git",
+    "nodc-bvol @ git+https://github.com/nodc-sweden/nodc-bvol.git",
+    "nodc-dyntaxa @ git+https://github.com/nodc-sweden/nodc-dyntaxa.git",
+    "nodc-geography @ git+https://github.com/nodc-sweden/nodc-geography.git",
+    "nodc-station @ git+https://github.com/nodc-sweden/nodc-station.git",
+    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pyinstaller>=4.5.1",
+]
