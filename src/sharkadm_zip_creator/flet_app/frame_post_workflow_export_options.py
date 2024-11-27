@@ -33,7 +33,7 @@ class FramePostWorkflowExportOptions(ft.Row):
 
     def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
         self.reset()
-        self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
+        self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=False)
 
         wid_list = [
             ft.Text('Exportalternativ efter körning'),
