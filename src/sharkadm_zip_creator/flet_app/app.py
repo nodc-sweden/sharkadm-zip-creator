@@ -35,6 +35,7 @@ class ZipArchiveCreatorGUI:
         self.page = None
 
         event.subscribe('log_workflow', self._on_log_workflow)
+        event.subscribe('progress', self._on_progress)
 
         self.app = ft.app(target=self.main)
 
@@ -107,6 +108,14 @@ class ZipArchiveCreatorGUI:
 
         self._info_text = ft.Text(bgcolor='gray')
 
+        self._progress_text = ft.Text()
+        self._progress_bar = ft.ProgressBar(width=400, value=0)
+
+        progress_row = ft.Row([
+            self._progress_bar,
+            self._progress_text,
+        ])
+
         self._tabs = ft.Tabs(
             selected_index=1,
             animation_duration=300,
@@ -138,6 +147,7 @@ class ZipArchiveCreatorGUI:
         self.page.controls.append(ft.Divider(height=5, thickness=2, color=constants.COLOR_DATASETS_MAIN))
         self.page.controls.append(self._tabs)
         self.page.controls.append(self._info_text)
+        self.page.controls.append(progress_row)
         self.update_page()
 
     def update_lists(self) -> None:
@@ -169,6 +179,24 @@ class ZipArchiveCreatorGUI:
             self.page.open(self._trigger_dlg)
         else:
             self._trigger_import()
+
+    def _on_progress(self, data: dict) -> None:
+        current = data.get('current', 1)
+        total = data.get('total', 1)
+        if current > total:
+            current = total
+
+        msg = data.get('msg') or f'{data.get("title", "")} ({current} / {total})'
+        self._progress_text.value = msg
+        self._progress_bar.value = int(10 * current / total) / 10
+        self._progress_text.update()
+        self._progress_bar.update()
+
+    def reset_progress(self):
+        self._progress_text.value = ''
+        self._progress_bar.value = 0
+        self._progress_text.update()
+        self._progress_bar.update()
 
     def _trigger_import(self, event=None):
         t0 = time.time()

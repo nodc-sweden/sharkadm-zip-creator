@@ -58,8 +58,10 @@ class FrameCreateZip(ft.Column):
             saves.config_saves.export_saves()
             self.save_export_options()
         except:
-            self.main_app.enable_frames()
             raise
+        finally:
+            self.main_app.enable_frames()
+            self.main_app.reset_progress()
 
     def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
         self._workflow = wflow
