@@ -31,7 +31,7 @@ class FrameWorkflowExportOptions(ft.Row):
                 exporters.append(exp)
         return exporters
 
-    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
+    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str, color: str = None) -> None:
         self.reset()
         self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=False)
 
@@ -46,11 +46,12 @@ class FrameWorkflowExportOptions(ft.Row):
             wid_list.append(ft.Divider(height=9, thickness=3))
             self._workflow_export_widgets.append(wid)
 
+        color = color or constants.COLOR_EXPORT_OPTIONS_SECONDARY
         self.lv.controls = wid_list
         self.controls.append(ft.Container(
             # width=100,
             content=self.lv,
-            bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY,
+            bgcolor=color,
             border_radius=20,
             padding=10,
             expand=True

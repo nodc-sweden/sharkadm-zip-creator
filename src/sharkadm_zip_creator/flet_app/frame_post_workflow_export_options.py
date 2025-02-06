@@ -22,16 +22,22 @@ class FramePostWorkflowExportOptions(ft.Row):
     def _get_exporters(self, incoming_exporters) -> list[dict]:
         exporters = []
         for exp in incoming_exporters:
+            print(f'in: {exp=}')
             for i, saved_exp in enumerate(self._saved_options[:]):
                 if exp['name'] == saved_exp['name']:
-                    exporters.append(saved_exp)
+                    updated_exp = {}
+                    for key, value in exp.items():
+                        updated_exp[key] = saved_exp.get(key, value)
+                    # exp.update(saved_exp)
+                    # print(f'in: {saved_exp=}')
+                    exporters.append(updated_exp)
                     self._saved_options.pop(i)
                     break
             else:
                 exporters.append(exp)
         return exporters
 
-    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
+    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str, color: str = None) -> None:
         self.reset()
         self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=False)
 
@@ -41,15 +47,17 @@ class FramePostWorkflowExportOptions(ft.Row):
         ]
         # for exp in wflow.exporters:
         for exp in self._get_exporters(wflow.exporters):
+            print(f'{exp=}')
             wid = operators.PostOperator(self, exp)
             wid_list.append(wid)
             wid_list.append(ft.Divider(height=9, thickness=3))
             self._workflow_export_widgets.append(wid)
 
+        color = color or constants.COLOR_EXPORT_OPTIONS_SECONDARY
         self.lv.controls = wid_list
         self.controls.append(ft.Container(
             content=self.lv,
-            bgcolor=constants.COLOR_EXPORT_OPTIONS_SECONDARY,
+            bgcolor=color,
             border_radius=20,
             padding=10,
             expand=True

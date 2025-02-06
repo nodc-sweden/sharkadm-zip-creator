@@ -60,9 +60,11 @@ class ZipArchiveCreatorGUI:
     def main(self, page: ft.Page):
         self.page = page
         self.page.title = 'Zip archive creator'
-        self.page.window_height = 900
-        self.page.window_width = 1700
+        self.page.window_height = 1100
+        self.page.window_width = 2000
         self.page.theme_mode = ft.ThemeMode.LIGHT
+        page.theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
+        page.dark_theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
         self._build()
         self._add_controls_to_save()
         self.import_user_saves()
@@ -261,14 +263,6 @@ class ZipArchiveCreatorGUI:
             data_holder = sharkadm.get_data_holder(path)
             self.show_info('Data holder loaded')
 
-            # Create
-            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type)
-            self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
-            self._add_source_to_workflow(wflow)
-            self.show_info('Workflow for creation is set up')
-
-            wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
-
             # Validate
             wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type)
             self.frame_validate.set_workflow(wflow, data_holder.data_type)
@@ -276,6 +270,14 @@ class ZipArchiveCreatorGUI:
             self.show_info('Workflow for validation is set up')
 
             wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
+
+            # Create
+            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type)
+            self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
+            self._add_source_to_workflow(wflow)
+            self.show_info('Workflow for creation is set up')
+
+            wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
 
         except Exception:
             raise

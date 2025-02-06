@@ -35,7 +35,7 @@ class FrameOperators(ft.Row):
     def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
         self.reset()
 
-        self.lv.controls.append(ft.Text(f'Operations som kommer att utföras är kopplade till datatypen '
+        self.lv.controls.append(ft.Text(f'Operationer som kommer att utföras är kopplade till datatypen '
                                         f'{data_type.capitalize()}', size=TEXT_SIZE_LABEL_1, weight=FONT_WEIGHT))
 
         descriptions = wflow.get_validator_before_descriptions()
