@@ -62,9 +62,11 @@ class FrameCreateZip(ft.Column):
         finally:
             self.main_app.enable_frames()
             self.main_app.reset_progress()
+            self.main_app.show_info('Allt klart!')
 
     def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
         self._workflow = wflow
+        print(f'{wflow.exporters=}')
         self.frame_operators.set_workflow(wflow, data_type)
 
         self.load_export_options()
@@ -73,7 +75,13 @@ class FrameCreateZip(ft.Column):
 
     def _update_workflow_with_options(self):
         export_options = self.frame_options.workflow_export_options
+        print(f'{export_options=}')
         self._workflow.exporters = self._update_exports_with_zip_archive(export_options)
+
+    def _update_export_directory_in_export_options(self, export_options: list[dict]):
+        for opt in export_options:
+            if opt.get('name') == 'ZipArchive':
+                opt['export_directory'] = self.main_app.zip_directory
 
     def _update_exports_with_zip_archive(self, export_options: list[dict]) -> list[dict]:
         """Adds ZipPackage export to given export_options. Returns updated list"""
@@ -83,13 +91,17 @@ class FrameCreateZip(ft.Column):
         for item in export_options:
             if item['name'] == zip_archive_exporter_name:
                 item['active'] = True
+                item['export_directory'] = str(self.main_app.zip_directory)
+                item['open_directory'] = True
                 export_found = True
             new_list.append(item)
+        print(f'{self.main_app.zip_directory=}')
         if not export_found:
             new_list.append(dict(
                 name=zip_archive_exporter_name,
                 active=True,
-                export_directory=self.main_app.zip_directory
+                export_directory=str(self.main_app.zip_directory),
+                open_directory=True,
             ))
         return new_list
 

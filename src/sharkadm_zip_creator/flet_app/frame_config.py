@@ -2,6 +2,7 @@ import pathlib
 import shutil
 
 import flet as ft
+import sharkadm.utils
 from sharkadm import utils as sharkadm_utils
 
 from sharkadm_zip_creator.flet_app.constants import COLOR_CONFIG_MAIN, COLOR_DATASETS_MAIN
@@ -37,17 +38,17 @@ class FrameConfig(ft.Row):
     def status_url(self) -> str:
         return self._status_url.value.strip()
 
-    @property
-    def datasets_directory(self) -> str:
-        if self._static_variable_paths_column.visible:
-            return self._datasets_directory.value
-        return self._datasets_directory_dynamic.value
+    # @property
+    # def datasets_directory(self) -> str:
+    #     if self._static_variable_paths_column.visible:
+    #         return self._datasets_directory.value
+    #     return self._datasets_directory_dynamic.value
 
-    @property
-    def config_directory(self) -> str:
-        if self._static_variable_paths_column.visible:
-            return self._config_directory.value
-        return self._config_directory_dynamic.value
+    # @property
+    # def config_directory(self) -> str:
+    #     if self._static_variable_paths_column.visible:
+    #         return self._config_directory.value
+    #     return self._config_directory_dynamic.value
 
     @property
     def zip_directory(self) -> str:
@@ -72,48 +73,51 @@ class FrameConfig(ft.Row):
         self._trigger_btn = ft.ElevatedButton(text='Trigga import', on_click=self.main_app.trigger_import, bgcolor='green')
         self._update_config_files_btn = ft.ElevatedButton(text='Uppdatera listor', on_click=self.main_app.update_lists)
 
+        if sharkadm.utils.has_admin_config():
+            self._update_config_files_btn.disabled = True
+
         return ft.Column([
             self._update_config_files_btn,
             self._get_import_config_button(),
             self._env_dropdown,
-            self._trigger_btn
+            # self._trigger_btn
         ])
 
     def _get_paths_row(self) -> ft.Row:
 
         label_col = ft.Column([
-            ft.Text('URL som triggar importen:'),
-            ft.Text('URL som kollar status på importen:'),
-            ft.Text('Mapp för dataset:'),
+            # ft.Text('URL som triggar importen:'),
+            # ft.Text('URL som kollar status på importen:'),
+            # ft.Text('Mapp för dataset:'),
             ft.Text('Mapp för zip-paket:'),
-            ft.Text('Mapp för configfiler:'),
+            # ft.Text('Mapp för configfiler:'),
         ])
 
         btn_col = ft.Column([
-            ft.Text(),
-            ft.Text(),
-            ft.ElevatedButton(text='Öppna mapp', on_click=self._open_datasets_directory),
+            # ft.Text(),
+            # ft.Text(),
+            # ft.ElevatedButton(text='Öppna mapp', on_click=self._open_datasets_directory),
             ft.ElevatedButton(text='Öppna mapp', on_click=self._open_zip_directory),
-            ft.ElevatedButton(text='Öppna mapp', on_click=self._open_config_directory)
+            # ft.ElevatedButton(text='Öppna mapp', on_click=self._open_config_directory)
         ])
 
-        self._trigger_url = ft.Text()
-        self._status_url = ft.Text()
+        # self._trigger_url = ft.Text()
+        # self._status_url = ft.Text()
 
-        self._datasets_directory = ft.Text()
+        # self._datasets_directory = ft.Text()
         self._zip_directory = ft.Text()
-        self._config_directory = ft.Text()
+        # self._config_directory = ft.Text()
 
         self._static_variable_paths_column = ft.Column([
-            self._datasets_directory,
+            # self._datasets_directory,
             self._zip_directory,
-            self._config_directory
+            # self._config_directory
         ])
 
         self._dynamic_variable_paths_column = ft.Column([
-            self._get_dataset_directory_row(),
+            # self._get_dataset_directory_row(),
             self._get_zip_directory_row(),
-            self._get_config_directory_row(),
+            # self._get_config_directory_row(),
         ], visible=False)
 
         var_col = ft.Column([
@@ -122,8 +126,8 @@ class FrameConfig(ft.Row):
         ])
 
         val_col = ft.Column([
-            self._trigger_url,
-            self._status_url,
+            # self._trigger_url,
+            # self._status_url,
             var_col
         ])
 
@@ -285,15 +289,15 @@ class FrameConfig(ft.Row):
         if value == 'LOKALT':
             self._static_variable_paths_column.visible = False
             self._dynamic_variable_paths_column.visible = True
-            self._trigger_btn.disabled = True
+            # self._trigger_btn.disabled = True
         else:
             self._static_variable_paths_column.visible = True
             self._dynamic_variable_paths_column.visible = False
-            self._trigger_btn.disabled = False
+            # self._trigger_btn.disabled = False
 
         self._static_variable_paths_column.update()
         self._dynamic_variable_paths_column.update()
-        self._trigger_btn.update()
+        # self._trigger_btn.update()
 
         config_saves.set_env(value)
         config_saves.import_saves(self)
@@ -305,7 +309,8 @@ class FrameConfig(ft.Row):
         self.main_app.show_info(f'Jobbar mot {self._env_dropdown.value}')
 
     def check_paths(self):
-        for cont in [self._datasets_directory_dynamic, self._config_directory_dynamic]:
+        # for cont in [self._datasets_directory_dynamic, self._config_directory_dynamic]:
+        for cont in [self._zip_directory_dynamic]:
             value = cont.value.strip()
             if not value:
                 continue
@@ -315,13 +320,13 @@ class FrameConfig(ft.Row):
 
     def _add_controls_to_save(self):
 
-        config_saves.add_control('_trigger_url', self._trigger_url)
-        config_saves.add_control('_status_url', self._status_url)
+        # config_saves.add_control('_trigger_url', self._trigger_url)
+        # config_saves.add_control('_status_url', self._status_url)
 
-        config_saves.add_control('_datasets_directory', self._datasets_directory)
+        # config_saves.add_control('_datasets_directory', self._datasets_directory)
         config_saves.add_control('_zip_directory', self._zip_directory)
-        config_saves.add_control('_config_directory', self._config_directory)
+        # config_saves.add_control('_config_directory', self._config_directory)
 
-        config_saves.add_control('_datasets_directory_dynamic', self._datasets_directory_dynamic)
+        # config_saves.add_control('_datasets_directory_dynamic', self._datasets_directory_dynamic)
         config_saves.add_control('_zip_directory_dynamic', self._zip_directory_dynamic)
-        config_saves.add_control('_config_directory_dynamic', self._config_directory_dynamic)
+        # config_saves.add_control('_config_directory_dynamic', self._config_directory_dynamic)

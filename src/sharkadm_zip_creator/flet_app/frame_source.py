@@ -104,7 +104,7 @@ class FrameSource(ft.Row):
 
     def _on_load_latest_data_source(self, e):
         if not self._latest_source_path.value:
-            self.main_app.shiw_info('Det finns ingen tidigare datakälla')
+            self.main_app.show_info('Det finns ingen tidigare datakälla')
             return
         self._set_source_path(self._latest_source_path.value, update_latest_source=False)
 
@@ -149,7 +149,10 @@ class FrameSource(ft.Row):
 
     def import_user_saves(self):
         user_saves.import_saves()
-        self._latest_source_path.value = user_saves.get('_latest_source_path', '')
+        latest = user_saves.get('_latest_source_path', '')
+        if latest and not pathlib.Path(latest).exists():
+            latest = ''
+        self._latest_source_path.value = latest
         self._latest_source_path.update()
 
     def export_user_saves(self):
