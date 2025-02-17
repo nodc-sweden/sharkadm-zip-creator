@@ -279,6 +279,9 @@ class ZipArchiveCreatorGUI:
 
             wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
 
+            # if not self.frame_config.env:
+            #     self.frame_config.env =
+
         except Exception:
             raise
         finally:

@@ -15,6 +15,12 @@ class FrameValidate(ft.Column):
         self.main_app = main_app
         self._workflow: workflow.SHARKadmWorkflow | None = None
 
+        self._workflow_config_path = ft.Text()
+        config_path_row = ft.Row([
+            ft.Text('Configurationsfil:'),
+            self._workflow_config_path
+        ])
+
         self.frame_operators = FrameOperators(self.main_app)
         self.frame_options = FrameWorkflowExportOptions(self)
         self.frame_post_options = FramePostWorkflowExportOptions(self)
@@ -33,6 +39,7 @@ class FrameValidate(ft.Column):
         expand=True,
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
 
+        self.controls.append(config_path_row)
         self.controls.append(main_row)
 
         # self.controls.append(ft.Row([
@@ -66,6 +73,7 @@ class FrameValidate(ft.Column):
 
     def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
         self._workflow = wflow
+        self._workflow_config_path.value = str(self._workflow.path)
         print(f'{wflow.exporters=}')
         self.frame_operators.set_workflow(wflow, data_type)
 

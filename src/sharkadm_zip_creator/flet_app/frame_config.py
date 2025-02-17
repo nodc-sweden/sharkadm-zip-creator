@@ -8,6 +8,9 @@ from sharkadm import utils as sharkadm_utils
 from sharkadm_zip_creator.flet_app.constants import COLOR_CONFIG_MAIN, COLOR_DATASETS_MAIN
 from sharkadm_zip_creator.flet_app.saves import config_saves
 
+if not sharkadm.utils.has_admin_config():
+    raise Exception(f'You must have admin configuration setup to run sharkadm_zip_creator')
+
 
 class FrameConfig(ft.Row):
 
@@ -58,17 +61,23 @@ class FrameConfig(ft.Row):
 
     def _set_dropdown_options(self) -> None:
         """Only sets options that have present config files"""
-        self._env_dropdown.options = [ft.dropdown.Option(value) for value in config_saves.present_envs]
+        # self._env_dropdown.options = [ft.dropdown.Option(value) for value in config_saves.present_envs]
+        self._env_dropdown.options = [ft.dropdown.Option('LOKALT')]
 
     def _get_option_column(self) -> ft.Column:
         self._env_dropdown = ft.Dropdown(
             width=100,
+            # height=40,
+            # text_size=10,
+            # padding=0,
             on_change=self._on_change_env
         )
         self._set_dropdown_options()
 
         if 'TEST' in config_saves.present_envs:
             self._env_dropdown.value = 'TEST'
+        # if 'LOKALT' in config_saves.present_envs:
+        #     self._env_dropdown.value = 'LOKALT'
 
         self._trigger_btn = ft.ElevatedButton(text='Trigga import', on_click=self.main_app.trigger_import, bgcolor='green')
         self._update_config_files_btn = ft.ElevatedButton(text='Uppdatera listor', on_click=self.main_app.update_lists)
@@ -77,7 +86,7 @@ class FrameConfig(ft.Row):
             self._update_config_files_btn.disabled = True
 
         return ft.Column([
-            self._update_config_files_btn,
+            # self._update_config_files_btn,
             self._get_import_config_button(),
             self._env_dropdown,
             # self._trigger_btn
@@ -311,6 +320,8 @@ class FrameConfig(ft.Row):
     def check_paths(self):
         # for cont in [self._datasets_directory_dynamic, self._config_directory_dynamic]:
         for cont in [self._zip_directory_dynamic]:
+            if cont.value is None:
+                continue
             value = cont.value.strip()
             if not value:
                 continue
