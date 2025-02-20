@@ -37,7 +37,7 @@ class FramePostWorkflowExportOptions(ft.Row):
                 exporters.append(exp)
         return exporters
 
-    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str, color: str = None) -> None:
+    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, color: str = None) -> None:
         self.reset()
         self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=False)
 

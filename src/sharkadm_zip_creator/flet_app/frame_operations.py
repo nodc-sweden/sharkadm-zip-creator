@@ -36,7 +36,7 @@ class FrameOperators(ft.Row):
         self.reset()
 
         self.lv.controls.append(ft.Text(f'Operationer som kommer att utföras är kopplade till datatypen '
-                                        f'{data_type.capitalize()}', size=TEXT_SIZE_LABEL_1, weight=FONT_WEIGHT))
+                                        f'{data_type}', size=TEXT_SIZE_LABEL_1, weight=FONT_WEIGHT))
 
         descriptions = wflow.get_validator_before_descriptions()
         if descriptions:

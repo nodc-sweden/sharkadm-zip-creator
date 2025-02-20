@@ -78,8 +78,8 @@ class FrameCreateZip(ft.Column):
         self.frame_operators.set_workflow(wflow, data_type)
 
         self.load_export_options()
-        self.frame_options.set_workflow(wflow, data_type)
-        self.frame_post_options.set_workflow(wflow, data_type)
+        self.frame_options.set_workflow(wflow)
+        self.frame_post_options.set_workflow(wflow)
 
     def _update_workflow_with_options(self):
         export_options = self.frame_options.workflow_export_options

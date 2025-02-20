@@ -263,8 +263,10 @@ class ZipArchiveCreatorGUI:
             data_holder = sharkadm.get_data_holder(path)
             self.show_info('Data holder loaded')
 
+            print(f'{data_holder.data_type=}')
+
             # Validate
-            wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type)
+            wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type_internal)
             self.frame_validate.set_workflow(wflow, data_holder.data_type)
             self._add_source_to_workflow(wflow)
             self.show_info('Workflow for validation is set up')
@@ -272,7 +274,7 @@ class ZipArchiveCreatorGUI:
             wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
 
             # Create
-            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type)
+            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
             self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
             self._add_source_to_workflow(wflow)
             self.show_info('Workflow for creation is set up')

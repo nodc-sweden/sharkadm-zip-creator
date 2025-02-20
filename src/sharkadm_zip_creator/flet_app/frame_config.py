@@ -70,7 +70,7 @@ class FrameConfig(ft.Row):
             # height=40,
             # text_size=10,
             # padding=0,
-            on_change=self._on_change_env
+            on_change=self._on_change_env,
         )
         self._set_dropdown_options()
 
