@@ -11,6 +11,7 @@ from sharkadm import utils as sharkadm_utils
 
 from sharkadm_zip_creator.flet_app import utils
 from sharkadm_zip_creator.flet_app.frame_source import FrameSource
+from sharkadm_zip_creator.flet_app.frame_system import FrameSystem
 
 USER_DIR = utils.USER_DIR
 SAVES_PATH = utils.SAVES_PATH
@@ -105,6 +106,8 @@ class ZipArchiveCreatorGUI:
         self.frame_create_zip = FrameCreateZip(self)
         self.frame_validate = FrameValidate(self)
 
+        self.frame_system = FrameSystem(self)
+
         self.frame_log = FrameLog(self)
         self.frame_source = FrameSource(self)
 
@@ -136,6 +139,11 @@ class ZipArchiveCreatorGUI:
                     text="Log",
                     icon=ft.icons.EDIT_DOCUMENT,
                     content=self.frame_log,
+                ),
+                ft.Tab(
+                    text="System",
+                    icon=ft.icons.SETTINGS,
+                    content=self.frame_system,
                 ),
             ],
             expand=1, expand_loose=True
