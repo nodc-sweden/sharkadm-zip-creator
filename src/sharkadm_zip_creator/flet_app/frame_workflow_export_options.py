@@ -24,7 +24,11 @@ class FrameWorkflowExportOptions(ft.Row):
         for exp in incoming_exporters:
             for i, saved_exp in enumerate(self._saved_options[:]):
                 if exp['name'] == saved_exp['name']:
-                    exporters.append(saved_exp)
+                    updated_exp = {}
+                    for key, value in exp.items():
+                        updated_exp[key] = saved_exp.get(key, value)
+                    exporters.append(updated_exp)
+                    # exporters.append(saved_exp)
                     self._saved_options.pop(i)
                     break
             else:
