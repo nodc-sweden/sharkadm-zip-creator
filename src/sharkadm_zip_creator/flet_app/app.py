@@ -63,9 +63,10 @@ class ZipArchiveCreatorGUI:
         self.page.title = 'Zip archive creator'
         self.page.window_height = 1100
         self.page.window_width = 2000
-        self.page.theme_mode = ft.ThemeMode.LIGHT
-        page.theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
-        page.dark_theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
+        self.page.theme_mode = ft.ThemeMode.DARK
+        # self.page.theme_mode = ft.ThemeMode.LIGHT
+        # page.theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
+        # page.dark_theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
         self._build()
         self._add_controls_to_save()
         self.import_user_saves()
@@ -152,9 +153,9 @@ class ZipArchiveCreatorGUI:
         self._tabs.selected_index = 0
 
         self.page.controls.append(self.frame_config)
-        self.page.controls.append(ft.Divider(height=5, thickness=2, color=constants.COLOR_DATASETS_MAIN))
+        self.page.controls.append(ft.Divider(height=5, thickness=2)) #, color=constants.COLOR_DATASETS_MAIN))
         self.page.controls.append(self.frame_source)
-        self.page.controls.append(ft.Divider(height=5, thickness=2, color=constants.COLOR_DATASETS_MAIN))
+        self.page.controls.append(ft.Divider(height=5, thickness=2)) #, color=constants.COLOR_DATASETS_MAIN))
         self.page.controls.append(self._tabs)
         self.page.controls.append(self._info_text)
         self.page.controls.append(progress_row)
