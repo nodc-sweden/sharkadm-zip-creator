@@ -38,40 +38,52 @@ class FrameOperators(ft.Row):
         self.lv.controls.append(ft.Text(f'Operationer som kommer att utföras är kopplade till datatypen '
                                         f'{data_type}', size=TEXT_SIZE_LABEL_1, weight=FONT_WEIGHT))
 
-        descriptions = wflow.get_validator_before_descriptions()
+        descriptions = wflow.get_operator_descriptions()
         if descriptions:
             self.lv.controls.append(ft.Divider())
-            self.lv.controls.append(ft.Text('Valideringar', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
+            self.lv.controls.append(
+                ft.Text('OPERATIONER', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
             for name, desc in descriptions.items():
                 self.lv.controls.append(ft.Row([
                     ft.Text(desc),
                     ft.Text(f'({name})')
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
 
-        descriptions = wflow.get_transformer_descriptions()
-        if descriptions:
-            self.lv.controls.append(ft.Divider())
-            self.lv.controls.append(ft.Text('Transformeringar', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
-            for name, desc in descriptions.items():
-                self.lv.controls.append(ft.Row([
-                    ft.Text(desc),
-                    ft.Text(f'({name})')
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
 
-        descriptions = wflow.get_validator_after_descriptions()
-        if descriptions:
-            self.lv.controls.append(ft.Divider())
-            self.lv.controls.append(ft.Text('Valideringar efter', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
-            for name, desc in descriptions.items():
-                self.lv.controls.append(ft.Row([
-                    ft.Text(desc),
-                    ft.Text(f'({name})')
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
+        # descriptions = wflow.get_validator_before_descriptions()
+        # if descriptions:
+        #     self.lv.controls.append(ft.Divider())
+        #     self.lv.controls.append(ft.Text('Valideringar', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
+        #     for name, desc in descriptions.items():
+        #         self.lv.controls.append(ft.Row([
+        #             ft.Text(desc),
+        #             ft.Text(f'({name})')
+        #         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
+        #
+        # descriptions = wflow.get_transformer_descriptions()
+        # if descriptions:
+        #     self.lv.controls.append(ft.Divider())
+        #     self.lv.controls.append(ft.Text('Transformeringar', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
+        #     for name, desc in descriptions.items():
+        #         self.lv.controls.append(ft.Row([
+        #             ft.Text(desc),
+        #             ft.Text(f'({name})')
+        #         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
+        #
+        # descriptions = wflow.get_validator_after_descriptions()
+        # if descriptions:
+        #     self.lv.controls.append(ft.Divider())
+        #     self.lv.controls.append(ft.Text('Valideringar efter', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
+        #     for name, desc in descriptions.items():
+        #         self.lv.controls.append(ft.Row([
+        #             ft.Text(desc),
+        #             ft.Text(f'({name})')
+        #         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
 
         descriptions = wflow.get_exporter_descriptions()
         if descriptions:
             self.lv.controls.append(ft.Divider())
-            self.lv.controls.append(ft.Text('Exporter', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
+            self.lv.controls.append(ft.Text('EXPORTER', size=TEXT_SIZE_LABEL_2, weight=FONT_WEIGHT))
             for name, desc in descriptions.items():
                 self.lv.controls.append(ft.Row([
                     ft.Text(desc),

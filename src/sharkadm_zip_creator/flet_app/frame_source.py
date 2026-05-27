@@ -18,16 +18,16 @@ class FrameSource(ft.Row):
         # col.controls.append(ft.Divider(height=9, thickness=3))
         row = ft.Row([
             self._get_pick_files_button(),
-            ft.Text('eller'),
+            ft.Text("eller"),
             self._get_pick_directory_button(),
-            ft.Text('eller'),
+            ft.Text("eller"),
             self._get_latest_source_row()
         ],
         # alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
         path_row = ft.Row([
-            ft.Text('Datakälla:'),
+            ft.Text("Datakälla:"),
             self._source_path
         ])
 
@@ -36,7 +36,7 @@ class FrameSource(ft.Row):
         self.controls.append(col)
 
     def _get_latest_source_row(self) -> ft.Row:
-        self._btn_load_latest_source = ft.ElevatedButton('Ladda senaste ->', on_click=self._on_load_latest_data_source)
+        self._btn_load_latest_source = ft.ElevatedButton("Ladda senaste ->", on_click=self._on_load_latest_data_source)
         row = ft.Row(
             [
                 self._btn_load_latest_source,
@@ -54,8 +54,8 @@ class FrameSource(ft.Row):
                         icon=ft.icons.UPLOAD_FILE,
                         on_click=lambda _: pick_source_file_dialog.pick_files(
                             allow_multiple=False,
-                            allowed_extensions=['xlsx'],
-                            dialog_title='Välj en datakälla från FIL'
+                            allowed_extensions=["xlsx", "txt"],
+                            dialog_title="Välj en datakälla från FIL"
                         ))
 
         row = ft.Row(
@@ -74,7 +74,7 @@ class FrameSource(ft.Row):
                         "Välj en datakälla från MAPP",
                         icon=ft.icons.UPLOAD_FILE,
                         on_click=lambda _: pick_source_directory_dialog.get_directory_path(
-                            dialog_title='Välj en datakälla från MAPP',
+                            dialog_title="Välj en datakälla från MAPP",
                             # initial_directory=None
                         ))
 
@@ -104,7 +104,7 @@ class FrameSource(ft.Row):
 
     def _on_load_latest_data_source(self, e):
         if not self._latest_source_path.value:
-            self.main_app.show_info('Det finns ingen tidigare datakälla')
+            self.main_app.show_info("Det finns ingen tidigare datakälla")
             return
         self._set_source_path(self._latest_source_path.value, update_latest_source=False)
 
@@ -114,7 +114,7 @@ class FrameSource(ft.Row):
             self._btn_load_latest_source.disabled = False
         self._btn_load_latest_source.update()
         if self._latest_source_path.value and not pathlib.Path(self._latest_source_path.value).exists():
-            self._latest_source_path.value = ''
+            self._latest_source_path.value = ""
 
     @property
     def source_path(self) -> pathlib.Path | None:
@@ -132,10 +132,10 @@ class FrameSource(ft.Row):
         self._check_latest_data_source()
         self._add_user_saves()
         self.export_user_saves()
-        # utils.custom_save.add('latest_data_source', path)
+        # utils.custom_save.add("latest_data_source", path)
 
     # def load_latest_source_path(self):
-    #     path = utils.custom_save.get('latest_data_source')
+    #     path = utils.custom_save.get("latest_data_source")
     #     if not path:
     #         return
     #     self._set_latest_source_path(path)
@@ -149,9 +149,9 @@ class FrameSource(ft.Row):
 
     def import_user_saves(self):
         user_saves.import_saves()
-        latest = user_saves.get('_latest_source_path', '')
+        latest = user_saves.get("_latest_source_path", "")
         if latest and not pathlib.Path(latest).exists():
-            latest = ''
+            latest = ""
         self._latest_source_path.value = latest
         self._latest_source_path.update()
 

@@ -51,25 +51,32 @@ class FrameCreateZip(ft.Column):
         self.controls.append(ft.ElevatedButton('Skapa zip-paket', on_click=self._create_zip_archive))
 
     def _create_zip_archive(self, e=None):
+        failed_msg = False
         if not self._workflow:
             self.main_app.show_info('Ingen fil vald!')
             return
         if not self.main_app.zip_directory:
-            self.main_app.show_info('Sökväg till zippaketen saknas!')
+            self.main_app.show_info('Sökväg till zip-paketen saknas!')
             return
         try:
             self.main_app.disable_frames()
             self._update_workflow_with_options()
-            self._workflow.start_workflow()
-            self.main_app.enable_frames()
-            saves.config_saves.export_saves()
-            self.save_export_options()
-        except:
+            info = self._workflow.start_workflow()
+            if info:
+                failed_msg = str(info.exception)
+            else:
+                saves.config_saves.export_saves()
+                self.save_export_options()
+        except Exception as e:
+            failed_msg = str(e)
             raise
-        finally:
-            self.main_app.enable_frames()
-            self.main_app.reset_progress()
-            self.main_app.show_info('Allt klart!')
+        self.main_app.enable_frames()
+        self.main_app.reset_progress()
+        print(f"{failed_msg=}")
+        if failed_msg:
+            self.main_app.show_dialog(failed_msg)
+        else:
+            self.main_app.show_info("Allt klart!")
 
     def set_workflow(self, wflow: workflow.SHARKadmWorkflow, data_type: str) -> None:
         self._workflow = wflow
@@ -88,13 +95,13 @@ class FrameCreateZip(ft.Column):
 
     def _update_export_directory_in_export_options(self, export_options: list[dict]):
         for opt in export_options:
-            if opt.get('name') == 'ZipArchive':
+            if opt.get('name') == 'PolarsZipArchive':
                 opt['export_directory'] = self.main_app.zip_directory
 
     def _update_exports_with_zip_archive(self, export_options: list[dict]) -> list[dict]:
         """Adds ZipPackage export to given export_options. Returns updated list"""
         new_list = []
-        zip_archive_exporter_name = 'ZipArchive'
+        zip_archive_exporter_name = 'PolarsZipArchive'
         export_found = False
         for item in export_options:
             if item['name'] == zip_archive_exporter_name:

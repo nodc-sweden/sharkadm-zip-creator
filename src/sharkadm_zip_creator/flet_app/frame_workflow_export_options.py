@@ -22,6 +22,7 @@ class FrameWorkflowExportOptions(ft.Row):
     def _get_exporters(self, incoming_exporters) -> list[dict]:
         exporters = []
         for exp in incoming_exporters:
+            print(f"{exp=}")
             for i, saved_exp in enumerate(self._saved_options[:]):
                 if exp['name'] == saved_exp['name']:
                     updated_exp = {}
@@ -44,8 +45,8 @@ class FrameWorkflowExportOptions(ft.Row):
             ft.Divider(height=9, thickness=3)
         ]
         # for exp in wflow.exporters:
-        for exp in self._get_exporters(wflow.exporters):
-            wid = operators.Operator(self, exp)
+        for exp in self._get_exporters(wflow.exporters_info):
+            wid = operators.OperatorCard(self, exp)
             wid_list.append(wid)
             wid_list.append(ft.Divider(height=9, thickness=3))
             self._workflow_export_widgets.append(wid)

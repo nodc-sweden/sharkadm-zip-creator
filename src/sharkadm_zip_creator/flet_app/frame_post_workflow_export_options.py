@@ -22,14 +22,11 @@ class FramePostWorkflowExportOptions(ft.Row):
     def _get_exporters(self, incoming_exporters) -> list[dict]:
         exporters = []
         for exp in incoming_exporters:
-            print(f'in: {exp=}')
             for i, saved_exp in enumerate(self._saved_options[:]):
                 if exp['name'] == saved_exp['name']:
                     updated_exp = {}
                     for key, value in exp.items():
                         updated_exp[key] = saved_exp.get(key, value)
-                    # exp.update(saved_exp)
-                    # print(f'in: {saved_exp=}')
                     exporters.append(updated_exp)
                     self._saved_options.pop(i)
                     break
@@ -46,8 +43,7 @@ class FramePostWorkflowExportOptions(ft.Row):
             ft.Divider(height=9, thickness=3)
         ]
         # for exp in wflow.exporters:
-        for exp in self._get_exporters(wflow.exporters):
-            print(f'{exp=}')
+        for exp in self._get_exporters(wflow.exporters_info):
             wid = operators.PostOperator(self, exp)
             wid_list.append(wid)
             wid_list.append(ft.Divider(height=9, thickness=3))

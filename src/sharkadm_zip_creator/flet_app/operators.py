@@ -2,16 +2,18 @@ import pathlib
 import textwrap
 
 import flet as ft
+from sharkadm.operator import Operator
 
 from sharkadm_zip_creator.flet_app import utils
 
 
-class Operator(ft.Card):
+class OperatorCard(ft.Card):
     def __init__(self, parent, operator: dict):
         super().__init__()
         self.parent_control = parent
         self.expand = True
-        self.name = operator['name']
+        print(f"{operator=}")
+        self.name = operator["name"]
 
         self.operator = {}
 
@@ -28,6 +30,11 @@ class Operator(ft.Card):
             if type(value) is bool:
                 wid = ft.Checkbox(key)
                 wid.value = value
+            elif type(value) is int:
+                wid = ft.TextField(label=key,
+                                   value=value,
+                                   input_filter=ft.NumbersOnlyInputFilter())
+                print(f"{wid.input_filter=}")
             else:
                 wid = ft.Text(key)
             self.operator[key] = wid
@@ -53,7 +60,12 @@ class Operator(ft.Card):
     def get_info(self) -> dict:
         info = dict(name=self.name)
         for key, wid in self.operator.items():
-            info[key] = wid.value
+            value = wid.value
+            if (hasattr(wid, "input_filter") and
+                    wid.input_filter and
+                    isinstance(wid.input_filter, ft.NumbersOnlyInputFilter)):
+                value = int(value)
+            info[key] = value
         return info
 
 

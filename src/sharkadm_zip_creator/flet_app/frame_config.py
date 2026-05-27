@@ -4,12 +4,12 @@ import shutil
 import flet as ft
 import sharkadm.utils
 from sharkadm import utils as sharkadm_utils
+from sharkadm import adm_logger
 
-from sharkadm_zip_creator.flet_app.constants import COLOR_CONFIG_MAIN, COLOR_DATASETS_MAIN
 from sharkadm_zip_creator.flet_app.saves import config_saves
 
-if not sharkadm.utils.has_admin_config():
-    raise Exception(f'You must have admin configuration setup to run sharkadm_zip_creator')
+if not sharkadm.config.has_admin_config():
+    adm_logger.log_workflow('You should really have admin configuration setup to run sharkadm_zip_creator! Just fix it!', level=adm_logger.ERROR)
 
 
 class FrameConfig(ft.Row):
@@ -82,7 +82,7 @@ class FrameConfig(ft.Row):
         self._trigger_btn = ft.ElevatedButton(text='Trigga import', on_click=self.main_app.trigger_import, bgcolor='green')
         self._update_config_files_btn = ft.ElevatedButton(text='Uppdatera listor', on_click=self.main_app.update_lists)
 
-        if sharkadm.utils.has_admin_config():
+        if sharkadm.config.has_admin_config():
             self._update_config_files_btn.disabled = True
 
         return ft.Column([
@@ -281,17 +281,17 @@ class FrameConfig(ft.Row):
     def _open_datasets_directory(self, event=None):
         if not self.datasets_directory:
             return
-        sharkadm_utils.open_directory(self.datasets_directory)
+        sharkadm_utils.open_file_or_directory(self.datasets_directory)
 
     def _open_zip_directory(self, event=None):
         if not self.zip_directory:
             return
-        sharkadm_utils.open_directory(self.zip_directory)
+        sharkadm_utils.open_file_or_directory(self.zip_directory)
 
     def _open_config_directory(self, event=None):
         if not self.config_directory:
             return
-        sharkadm_utils.open_directory(self.config_directory)
+        sharkadm_utils.open_file_or_directory(self.config_directory)
 
     def _on_change_env(self, event=None):
         value = self._env_dropdown.value

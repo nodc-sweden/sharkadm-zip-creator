@@ -8,6 +8,7 @@ import sharkadm
 from sharkadm import event
 from sharkadm import workflow
 from sharkadm import utils as sharkadm_utils
+from sharkadm.data import get_polars_data_holder
 
 from sharkadm_zip_creator.flet_app import utils
 from sharkadm_zip_creator.flet_app.frame_source import FrameSource
@@ -17,7 +18,7 @@ USER_DIR = utils.USER_DIR
 SAVES_PATH = utils.SAVES_PATH
 from sharkadm_zip_creator.flet_app import constants
 
-from sharkadm_zip_creator.flet_app.saves import config_saves
+from sharkadm_zip_creator.flet_app.saves import config_saves, user_saves
 from sharkadm_zip_creator.archive_remover import ArchiveRemover
 
 from sharkadm_zip_creator.flet_app.frame_config import FrameConfig
@@ -60,10 +61,11 @@ class ZipArchiveCreatorGUI:
 
     def main(self, page: ft.Page):
         self.page = page
-        self.page.title = 'Zip archive creator'
-        self.page.window_height = 1100
-        self.page.window_width = 2000
+        self.page.title = 'Zip archive creator test'
+        self.page.window.height = 1200
+        self.page.window.width = 2200
         self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.window.on_event = self._on_app_event
         # self.page.theme_mode = ft.ThemeMode.LIGHT
         # page.theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
         # page.dark_theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
@@ -73,6 +75,9 @@ class ZipArchiveCreatorGUI:
         config_saves.import_saves(self)
         self.frame_config.show_env_message()
         # self.frame_config.check_paths()
+
+    def _on_app_event(self, *args):
+        self._save_layout()
 
     def update_page(self):
         self.page.update()
@@ -108,6 +113,7 @@ class ZipArchiveCreatorGUI:
         self.frame_validate = FrameValidate(self)
 
         self.frame_system = FrameSystem(self)
+        self.frame_nodc_config = FrameSystem(self)
 
         self.frame_log = FrameLog(self)
         self.frame_source = FrameSource(self)
@@ -146,11 +152,16 @@ class ZipArchiveCreatorGUI:
                     icon=ft.icons.SETTINGS,
                     content=self.frame_system,
                 ),
+                ft.Tab(
+                    text="Config",
+                    icon=ft.icons.NOTE,
+                    content=self.frame_system,
+                ),
             ],
             expand=1, expand_loose=True
         )
 
-        self._tabs.selected_index = 0
+        self._tabs.selected_index = 1
 
         self.page.controls.append(self.frame_config)
         self.page.controls.append(ft.Divider(height=5, thickness=2)) #, color=constants.COLOR_DATASETS_MAIN))
@@ -269,10 +280,10 @@ class ZipArchiveCreatorGUI:
         try:
             self.disable_frames()
 
-            data_holder = sharkadm.get_data_holder(path)
+            data_holder = get_polars_data_holder(path)
             self.show_info('Data holder loaded')
 
-            print(f'{data_holder.data_type=}')
+            print(f'{data_holder.data_type_internal=}')
 
             # Validate
             wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type_internal)
@@ -308,7 +319,16 @@ class ZipArchiveCreatorGUI:
     def import_user_saves(self):
         config_saves.import_saves(self)
         self.frame_source.import_user_saves()
+        self.page.window.width = user_saves.get("page_window_width")
+        self.page.window.height = user_saves.get("page_window_height")
+        self.update_page()
 
+    def _save_layout(self):
+        user_saves.add_settings(
+            page_window_width=self.page.window.width,
+            page_window_height=self.page.window.height,
+        )
+        user_saves.export_saves()
 
     def _add_controls_to_save(self):
         pass
