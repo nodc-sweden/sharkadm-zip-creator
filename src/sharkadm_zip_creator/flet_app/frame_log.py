@@ -21,7 +21,7 @@ class FrameLog(ft.Row):
     def _open_log_directory(self, *args):
         if not utils.USER_DIR.exists():
             return
-        sharkadm_utils.open_directory(utils.USER_DIR)
+        sharkadm_utils.open_file_or_directory(utils.USER_DIR)
 
     def clear_text(self) -> None:
         self.lv.controls = []

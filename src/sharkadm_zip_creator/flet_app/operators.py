@@ -7,11 +7,13 @@ from sharkadm.operator import Operator
 from sharkadm_zip_creator.flet_app import utils
 
 
+
 class OperatorCard(ft.Card):
-    def __init__(self, parent, operator: dict):
+    def __init__(self, parent, operator: dict, allow_turn_off: bool = True):
         super().__init__()
         self.parent_control = parent
         self.expand = True
+        self._allow_turn_off = allow_turn_off
         print(f"{operator=}")
         self.name = operator["name"]
 
@@ -19,6 +21,8 @@ class OperatorCard(ft.Card):
 
         name = operator['name']
         self._main_cb = ft.Checkbox(name, on_change=self._on_change_main)
+        if not self._allow_turn_off:
+            self._main_cb.disabled = True
         if operator.get('active', True):
             self._main_cb.value = True
         self.operator['active'] = self._main_cb
@@ -50,6 +54,10 @@ class OperatorCard(ft.Card):
             width=400,
             padding=10,
         )
+
+    @property
+    def has_options(self) -> bool:
+        return bool(len(self._children_col.controls))
 
     def _on_change_main(self, e):
         self._children_col.disabled = True

@@ -17,7 +17,6 @@ from sharkadm_zip_creator.flet_app.frame_system import FrameSystem
 USER_DIR = utils.USER_DIR
 SAVES_PATH = utils.SAVES_PATH
 from sharkadm_zip_creator.flet_app import constants
-
 from sharkadm_zip_creator.flet_app.saves import config_saves, user_saves
 from sharkadm_zip_creator.archive_remover import ArchiveRemover
 
