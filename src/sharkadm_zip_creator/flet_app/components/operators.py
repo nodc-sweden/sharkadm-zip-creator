@@ -5,30 +5,31 @@ import flet as ft
 from sharkadm.operator import Operator
 
 from sharkadm_zip_creator.flet_app import utils
+from sharkadm_zip_creator.flet_app import event
 
 
 
+@ft.control
 class OperatorCard(ft.Card):
-    def __init__(self, parent, operator: dict, allow_turn_off: bool = True):
-        super().__init__()
-        self.parent_control = parent
-        self.expand = True
-        self._allow_turn_off = allow_turn_off
-        print(f"{operator=}")
-        self.name = operator["name"]
+    allow_turn_off: bool = True
+    operator: dict = None
+    expand: bool = True
 
-        self.operator = {}
+    def init(self):
+        self.name = self.operator["name"]
 
-        name = operator['name']
+        self.operator_widgets = {}
+
+        name = self.operator['name']
         self._main_cb = ft.Checkbox(name, on_change=self._on_change_main)
-        if not self._allow_turn_off:
+        if not self.allow_turn_off:
             self._main_cb.disabled = True
-        if operator.get('active', True):
+        if self.operator.get('active', True):
             self._main_cb.value = True
-        self.operator['active'] = self._main_cb
+        self.operator_widgets['active'] = self._main_cb
 
         self._children_col = ft.Column()
-        for key, value in operator.items():
+        for key, value in self.operator.items():
             if key in ['name', 'active']:
                 continue
             if type(value) is bool:
@@ -38,10 +39,9 @@ class OperatorCard(ft.Card):
                 wid = ft.TextField(label=key,
                                    value=value,
                                    input_filter=ft.NumbersOnlyInputFilter())
-                print(f"{wid.input_filter=}")
             else:
                 wid = ft.Text(key)
-            self.operator[key] = wid
+            self.operator_widgets[key] = wid
             self._children_col.controls.append(wid)
 
         self.content = ft.Container(
@@ -53,6 +53,7 @@ class OperatorCard(ft.Card):
             ),
             width=400,
             padding=10,
+            expand=True,
         )
 
     @property
@@ -67,7 +68,7 @@ class OperatorCard(ft.Card):
 
     def get_info(self) -> dict:
         info = dict(name=self.name)
-        for key, wid in self.operator.items():
+        for key, wid in self.operator_widgets.items():
             value = wid.value
             if (hasattr(wid, "input_filter") and
                     wid.input_filter and
@@ -77,20 +78,24 @@ class OperatorCard(ft.Card):
         return info
 
 
-class PostOperator(ft.Card):
-    def __init__(self, parent, operator: dict):
-        super().__init__()
-        self.parent_control = parent
+
+@ft.control
+class PostOperatorCard(ft.Card):
+    allow_turn_off: bool = True
+    operator: dict = None
+    expand: bool = True
+
+    def init(self):
         self.expand = True
-        self.name = operator['name']
+        self.name = self.operator['name']
 
-        self.operator = {}
+        self.operator_widgets = {}
 
-        name = operator['name']
-        self._main_cb = ft.ElevatedButton(name, on_click=self._on_click_main)
+        name = self.operator['name']
+        self._main_cb = ft.Button(name, on_click=self._on_click_main)
 
         self._children_col = ft.Column()
-        for key, value in operator.items():
+        for key, value in self.operator.items():
             if key in ['name', 'active']:
                 continue
             if type(value) is bool:
@@ -98,7 +103,7 @@ class PostOperator(ft.Card):
                 wid.value = value
             else:
                 wid = ft.Text(key)
-            self.operator[key] = wid
+            self.operator_widgets[key] = wid
             self._children_col.controls.append(wid)
 
         self.content = ft.Container(
@@ -115,11 +120,11 @@ class PostOperator(ft.Card):
     def _on_click_main(self, e):
         info = self.get_info()
         info['name'] = self.name
-        self.parent_control.run_exporter(**info)
+        event.post_event(event.Events.RUN_EXPORTER, info)
 
     def get_info(self) -> dict:
         info = dict(name=self.name)
-        for key, wid in self.operator.items():
+        for key, wid in self.operator_widgets.items():
             info[key] = wid.value
         return info
 
@@ -150,13 +155,13 @@ class _Operator(ft.Row):
         self.expand = True
         self.name = operator['name']
 
-        self.operator = {}
+        self.operator_widgets = {}
 
         name = operator['name']
         cb = ft.Checkbox(name)
         if operator.get('active', True):
             cb.value = True
-        self.operator['active'] = cb
+        self.operator_widgets['active'] = cb
 
         col = ft.Column()
         for key, value in operator.items():
@@ -166,7 +171,7 @@ class _Operator(ft.Row):
                 wid = ft.Checkbox(key)
             else:
                 wid = ft.Text(key)
-            self.operator[key] = wid
+            self.operator_widgets[key] = wid
             col.controls.append(wid)
 
         self.controls = [
@@ -176,6 +181,6 @@ class _Operator(ft.Row):
 
     def get_info(self) -> dict:
         info = dict(name=self.name)
-        for key, wid in self.operator.items():
+        for key, wid in self.operator_widgets.items():
             info[key] = wid.value
         return info

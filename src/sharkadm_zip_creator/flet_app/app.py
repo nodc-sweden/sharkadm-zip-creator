@@ -1,54 +1,96 @@
+import asyncio
 import os
 import pathlib
-import time
+import threading
+from queue import Queue
 
 import flet as ft
-import nodc_codes
-import sharkadm
-from sharkadm import event
-from sharkadm import workflow
-from sharkadm import utils as sharkadm_utils
-from sharkadm.data import get_polars_data_holder
+import time
+from openpyxl.worksheet import controls
+from sharkadm import event as sharkadm_event
+from sharkadm.sharkadm_logger import adm_logger
 
+from flet_app import app_source
+from flet_app.app_source import SourceType
+from flet_app.components import ConfigComponent
+from flet_app.frames import (
+    FrameCreateSingleZip,
+    FrameCreateMultipleZip
+)
 from sharkadm_zip_creator.flet_app import utils
-from sharkadm_zip_creator.flet_app.frame_source import FrameSource
-from sharkadm_zip_creator.flet_app.frame_system import FrameSystem
 
 USER_DIR = utils.USER_DIR
 SAVES_PATH = utils.SAVES_PATH
-from sharkadm_zip_creator.flet_app import constants
-from sharkadm_zip_creator.flet_app.saves import config_saves, user_saves
-from sharkadm_zip_creator.archive_remover import ArchiveRemover
+from sharkadm_zip_creator.flet_app.saves import user_saves
 
-from sharkadm_zip_creator.flet_app.frame_config import FrameConfig
+from sharkadm_zip_creator.flet_app import event
 from sharkadm_zip_creator.flet_app.frame_log import FrameLog
-from sharkadm_zip_creator.flet_app.frame_create_zip import FrameCreateZip
-from sharkadm_zip_creator.flet_app.frame_validate import FrameValidate
 
-from sharkadm_zip_creator.trigger import Trigger
+from sharkadm_zip_creator.flet_app import app_state
 
-from sharkadm_zip_creator import exceptions
+log_buffer = Queue()
+
+# adm_logger.print_on_screen()
 
 
-class ZipArchiveCreatorGUI:
+class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
     def __init__(self):
+        app_state.AppState.__init__(self)
+        app_source.AppSource.__init__(self)
+        print(f"{self.state=}")
+        print(f"{self.source_type=}")
+
+        user_saves.set_main_app(self)
+        user_saves.import_saves()
+
+        self._latest_state = app_state.States.TEST
+        print(f"ZipArchiveCreatorGUI: {threading.current_thread().name=}")
 
         self.page = None
 
-        event.subscribe('log_workflow', self._on_log_workflow)
-        event.subscribe('progress', self._on_progress)
+        sharkadm_event.subscribe(sharkadm_event.Events.LOG_WORKFLOW, self._on_log_workflow)
+        sharkadm_event.subscribe(sharkadm_event.Events.LOG_PROGRESS, self._on_progress)
 
-        self.app = ft.app(target=self.main)
+        # event.subscribe(event.Events.SHOW_INFO, self._on_change_state, prio=5) # test
+        event.subscribe(event.Events.SHOW_INFO, self._on_show_info)
+        event.subscribe(event.Events.SHOW_DIALOG, self._on_show_dialog)
+        event.subscribe(event.Events.RESET_PROGRESS, self.reset_progress)
+        event.subscribe(event.Events.CHANGE_STATE, self._on_change_state, prio=5)
+        event.subscribe(event.Events.CHANGE_SOURCE_TYPE, self._on_change_source_type, prio=5)
+
+        event.subscribe(event.Events.DISABLE, self.disable, prio=5)
+        event.subscribe(event.Events.ENABLE, self.enable, prio=5)
+
+        # print("="*100)
+        # print("ZipArchiveCreatorGUI.__init__")
+        # print("-"*100)
+        # for key, value in event._subscribers.items():
+        #     print(f"{key=}")
+        #     for p, items in value.items():
+        #         print(f"  {p=}")
+        #         for item in items:
+        #             print(f"    {item=}")
+        # print("-" * 100)
+        # print("-" * 100)
+        # print(f"{list(event.Events)=}")
+        # print(f"{event._subscribers.keys()=}")
+        # print(f"{event.__file__=}")
+        # print(f"{id(event._subscribers)=}")
+        # print("APP")
+        # print("-" * 100)
+        # print("-" * 100)
+
+        self.app = ft.run(self.start)
 
         self._remove_log_file()
 
     @property
     def log_file_path(self) -> pathlib.Path:
-        return USER_DIR / 'zip_creator_log.txt'
+        return USER_DIR / self.state.log_file_name
 
-    @property
-    def zip_directory(self) -> str:
-        return self.frame_config.zip_directory
+    # @property
+    # def zip_directory(self) -> str:
+    #     return self.frame_config.zip_directory
 
     def _remove_log_file(self):
         if self.log_file_path.exists():
@@ -58,148 +100,197 @@ class ZipArchiveCreatorGUI:
         with open(self.log_file_path, 'a', encoding='cp1252') as fid:
             fid.write(f'{text}\n')
 
-    def main(self, page: ft.Page):
+    def start(self, page: ft.Page):
         self.page = page
-        self.page.title = 'Zip archive creator test'
+        self.page.title = self.state.app_title
         self.page.window.height = 1200
         self.page.window.width = 2200
         self.page.theme_mode = ft.ThemeMode.DARK
         self.page.window.on_event = self._on_app_event
+
+        # self.page.add(ft.Column([
+        #     ft.Text("Testar"),
+        #     ft.Text("Testar två rader"),
+        #     ConfigComponent()
+        # ]))
+        # return
+
+        # self.config_component = ConfigComponent(
+        #     state=str(self.state.state),
+        #     source_type=str(self.source_type.source),
+        # )
+        # self.page.add(self.config_component)
+
+        self.create_layout()
+
+        # start UI log loop
+        self.page.run_task(self._log_loop)
+
         # self.page.theme_mode = ft.ThemeMode.LIGHT
         # page.theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
         # page.dark_theme = ft.Theme(color_scheme_seed=ft.Colors.GREEN)
-        self._build()
-        self._add_controls_to_save()
-        self.import_user_saves()
-        config_saves.import_saves(self)
-        self.frame_config.show_env_message()
+        # self._build()
+        # self._add_controls_to_save()
+        # self.import_user_saves()
+        # config_saves.import_saves(self)
+        # self.frame_config.show_env_message()
         # self.frame_config.check_paths()
 
-    def _on_app_event(self, *args):
-        self._save_layout()
+    async def _log_loop(self):
+        while True:
+            try:
+                data = log_buffer.get_nowait()
+            except Exception:
+                await asyncio.sleep(0.05)
+                continue
 
-    def update_page(self):
-        self.page.update()
+            level = data.get("level", "").upper()
+            msg = data.get("msg", "")
 
-    def disable_frames(self):
-        self.frame_create_zip.disabled = True
-        self.frame_validate.disabled = True
-        self.frame_source.disabled = True
-        self.frame_config.disabled = True
-        self._update_frames()
+            self._info_text.value = f"{level}: {msg}"
+            self.page.update()
 
-    def enable_frames(self):
-        self.frame_create_zip.disabled = False
-        self.frame_validate.disabled = False
-        self.frame_source.disabled = False
-        self.frame_config.disabled = False
-        self._update_frames()
+    def _on_change_state(self, data: dict) -> None:
+        print("CHANGING STATE")
+        if data.get('state') == app_state.States.PROD:
+            self.state.set_to_prod()
+        elif data.get('state') == app_state.States.TEST:
+            self.state.set_to_test()
+        self._latest_state = self.state.state
+        # user_saves.import_saves()
+        self.page.title = self.state.app_title
+        self.update_layout()
 
-    def _update_frames(self):
-        self.frame_create_zip.update()
-        self.frame_validate.update()
-        self.frame_source.update()
-        self.frame_config.update()
+    def _on_change_source_type(self, data: dict) -> None:
+        if data.get('source_type') == app_source.SourceType.SINGLE:
+            self.source_type.set_to_single()
+        elif data.get('source_type') == app_source.SourceType.MULTIPLE:
+            self.source_type.set_to_multiple()
+        # user_saves.import_saves()
+        self.page.title = self.state.app_title
+        self.update_layout()
 
-    def _build(self):
-        self._dialog_text = ft.Text()
-        self._dlg = ft.AlertDialog(
-            title=self._dialog_text
+    def disable(self, *args, **kwargs):
+        self.config_component.disabled = True
+        self.config_component.update()
+
+    def enable(self, *args, **kwargs):
+        self.config_component.disabled = False
+        self.config_component.update()
+
+    def create_layout(self):
+        print("Creating Layout in main app!")
+        # self.page.controls.clear()
+        # self.page.controls = self.page.controls[:1]
+        # # self.update_page()
+        # event.clear_subscribers()
+        self._build_components()
+        self._build_layout()
+        self.update_page()
+
+    def update_layout(self):
+        print("Updating Layout in main app!")
+        self._update_layout()
+        self.update_page()
+
+
+    def _build_components(self):
+        print("BUILDING")
+
+        self.config_component = ConfigComponent(
+            state=str(self.state.state),
+            source_type=str(self.source_type.source),
         )
 
-        self.frame_config = FrameConfig(self)
-        self.frame_create_zip = FrameCreateZip(self)
-        self.frame_validate = FrameValidate(self)
+        self._dialog_text = ft.Text()
+        self._dlg = ft.AlertDialog(title=self._dialog_text)
 
-        self.frame_system = FrameSystem(self)
-        self.frame_nodc_config = FrameSystem(self)
-
-        self.frame_log = FrameLog(self)
-        self.frame_source = FrameSource(self)
-
-        self._info_text = ft.Text(bgcolor='gray')
+        self._info_text = ft.Text("Det här är infotext....som kommer att ändras när det händer något...", bgcolor='gray')
+        print(f"_build_components: {id(self._info_text)=}")
 
         self._progress_text = ft.Text()
         self._progress_bar = ft.ProgressBar(width=400, value=0)
 
-        progress_row = ft.Row([
+        self._progress_row = ft.Row([
             self._progress_bar,
             self._progress_text,
         ])
 
+        self.frame_log = FrameLog()
+        if hasattr(self, "_frame_create_single_zip"):
+            # print(f"1: {self._frame_create_single_zip=}")
+            print(f"1: {id(self._frame_create_single_zip)=}")
+        self._frame_create_single_zip = FrameCreateSingleZip(visible=self.source_type.source == SourceType.SINGLE, main_app=self)
+        self._frame_create_multiple_zip = FrameCreateMultipleZip(visible=self.source_type.source == SourceType.MULTIPLE)
+        if hasattr(self, "_frame_create_single_zip"):
+            # print(f"2: {self._frame_create_single_zip=}")
+            print(f"2: {id(self._frame_create_single_zip)=}")
+
+        self._frame_create_single_zip.state = self.state
+        self._frame_create_multiple_zip.state = self.state
+
+        self._frame_temp = ft.Column([ft.Text("testar detta")])
+
+        self._frame_create_single_zip.visible = self.state.is_visible("single_zip")
+        self._frame_temp.visible = self.state.is_visible("temp")
+
+
         self._tabs = ft.Tabs(
-            selected_index=1,
-            animation_duration=300,
-            tabs=[
-                ft.Tab(
-                    text="Validera",
-                    icon=ft.icons.CHECKLIST,
-                    content=self.frame_validate,
-                ),
-                ft.Tab(
-                    text="Skapa ZIP-paket",
-                    icon=ft.icons.FOLDER_ZIP,
-                    content=self.frame_create_zip,
-                ),
-                ft.Tab(
-                    text="Log",
-                    icon=ft.icons.EDIT_DOCUMENT,
-                    content=self.frame_log,
-                ),
-                ft.Tab(
-                    text="System",
-                    icon=ft.icons.SETTINGS,
-                    content=self.frame_system,
-                ),
-                ft.Tab(
-                    text="Config",
-                    icon=ft.icons.NOTE,
-                    content=self.frame_system,
-                ),
-            ],
-            expand=1, expand_loose=True
+            length=2,
+            expand=True,
+            content=ft.Column(
+                expand=True,
+                controls=[
+                    ft.TabBar(
+                        tabs=[
+                            ft.Tab(label="Skapa ZIP-paket"),
+                            ft.Tab(label="Log", icon=ft.Icons.EDIT_DOCUMENT),
+                        ]
+                    ),
+                    ft.TabBarView(
+                        expand=True,
+                        controls=[
+                            # ft.Container(
+                            #     expand=True,
+                            #     content=self._frame_create_single_zip,
+                            # ),
+                            ft.Container(
+                            #     alignment=ft.Alignment.CENTER,
+                                content=ft.Column([
+                                    self._frame_create_single_zip,
+                                    self._frame_temp,
+
+        # self._frame_create_multiple_zip,
+                                ], expand=True),
+                                expand=True,
+                            ),
+                            ft.Container(
+                                alignment=ft.Alignment.CENTER,
+                                content=self.frame_log,
+                                expand=True,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
         )
 
-        self._tabs.selected_index = 1
 
-        self.page.controls.append(self.frame_config)
-        self.page.controls.append(ft.Divider(height=5, thickness=2)) #, color=constants.COLOR_DATASETS_MAIN))
-        self.page.controls.append(self.frame_source)
-        self.page.controls.append(ft.Divider(height=5, thickness=2)) #, color=constants.COLOR_DATASETS_MAIN))
-        self.page.controls.append(self._tabs)
-        self.page.controls.append(self._info_text)
-        self.page.controls.append(progress_row)
-        self.update_page()
+    def _build_layout(self):
+        print("BUILDING LAYOUT")
+        self._main_column = ft.Column([
+            self.config_component,
+                ft.Text(self.state.test_text),
+                self._tabs,
+                ft.Divider(),
+                self._info_text,
+                self._progress_row,
+        ], expand=True)
+        self.page.add(self._main_column)
 
-    def update_lists(self) -> None:
-        nodc_codes.update_config_files()
-
-    def trigger_import(self, *args, on_remove=False):
-        if not (self.frame_config.trigger_url and self.frame_config.status_url):
-            self.show_dialog('Du måste fylla i fälten för URL!')
-            return
-        rem = ArchiveRemover(sharkdata_datasets_directory=self.frame_config.datasets_directory)
-        packs = rem.get_packages_waiting_to_be_removed()
-        if not packs and on_remove:
-            self.show_dialog('Det finns ingen info om vad som ska tas bort!')
-            return
-        if packs:
-            msg = f'Det finns en remove.txt fil i datasetmappen med {len(packs)} rader. Vill du fortfarande trigga APIet?'
-            if on_remove:
-                msg = f'Är du säker på att du vill ta bort {len(packs)} paket?'
-            self._trigger_dlg = ft.AlertDialog(
-                modal=True,
-                title=ft.Text('WARNING: remove.txt'),
-                content=ft.Text(msg),
-                actions=[
-                    ft.TextButton('Ja', on_click=self._trigger_import),
-                    ft.TextButton('Nej', on_click=lambda x: self.page.close(self._trigger_dlg)),
-                    ft.TextButton('Öppna filen', on_click=lambda x: sharkadm_utils.open_file_with_default_program(rem.remove_file_path)),
-                ]
-            )
-            self.page.open(self._trigger_dlg)
-        else:
-            self._trigger_import()
+    def _update_layout(self):
+        self._frame_create_single_zip.visible = self.state.is_visible("single_zip")
+        self._frame_temp.visible = self.state.is_visible("temp")
 
     def _on_progress(self, data: dict) -> None:
         current = data.get('current', 1)
@@ -219,118 +310,110 @@ class ZipArchiveCreatorGUI:
         self._progress_text.update()
         self._progress_bar.update()
 
-    def _trigger_import(self, event=None):
-        t0 = time.time()
-        max_time = 10
-        if hasattr(self, '_trigger_dlg'):
-            self.page.close(self._trigger_dlg)
-        self.show_info(f'Triggar import...')
-        trig = Trigger(trigger_url=self.frame_config.trigger_url, status_url=self.frame_config.status_url)
-        # time.sleep(0.2)
-        rem = ArchiveRemover(sharkdata_datasets_directory=self.frame_config.datasets_directory,
-                             zip_directory=self.frame_config.zip_directory, )
-        packs = rem.get_packages_waiting_to_be_removed()
-        self._disable_on_trigger_import()
-        while True:
-            try:
-                trig.trigger_import()
-                while rem.remove_file_path.exists():
-                    time.sleep(0.2)
-                break
-            except exceptions.ImportNotAvailable:
-                self.show_info('Triggern är inte tillgänglig. Försöker igen...')
-                time.sleep(0.2)
-                if (time.time() - t0) > max_time:
-                    self.show_info(f'Triggern är inte tillgänglig. Försökte i {max_time} sekunder men nu ger jag upp!')
-                    self._enable_on_trigger_import()
-                    return
-        if packs:
-            self.show_info(f'Tar bort gamla paket under: {self.frame_config.zip_directory}!')
-            rem.remove_old_packs_in_zip_directory(packs)
-        self._enable_on_trigger_import()
-        self.show_info(f'Importen/borttagningen är klar!')
-
-    def show_dialog(self, text: str):
-        self.show_info(text)
+    def _on_show_dialog(self, text: str):
+        print()
+        print(f"{text=}")
+        self._on_show_info(text)
         self._dialog_text.value = text
         self._open_dlg()
+
+    def _on_show_info(self, msg: str = '') -> None:
+        self._add_to_log_file(msg)
+        self.frame_log.add_text(msg)
+        self._info_text.value = msg
+        print(f"{msg=}")
+        # self._info_text.update()
+        self._info_text.update()
+        # self.page.update()
+        print(f"_on_show_info: {id(self._info_text)=}")
+        # time.sleep(1)
+
+    def _on_log_workflow(self, data: dict) -> None:
+        level = data.get('level')
+        # if level == 'debug':
+        #     return
+        # if level in ['warning', 'error']:
+        #     level = level.upper()
+        level = level.upper()
+        text = f'{level}: {data.get("msg")}'
+        self._on_show_info(text)
 
     def _open_dlg(self, *args):
         self.page.dialog = self._dlg
         self._dlg.open = True
         self.update_page()
 
-    def _on_log_workflow(self, data: dict) -> None:
-        level = data.get('level')
-        if level == 'debug':
-            return
-        if level in ['warning', 'error']:
-            level = level.upper()
-        text = f'{level}: {data.get("msg")}'
-        self.show_info(text)
+    def _on_app_event(self, *args):
+        self._save_layout()
+    #
+    def update_page(self):
+        print("update_page")
+        self.page.update()
 
-    def show_info(self, msg: str = '') -> None:
-        self._add_to_log_file(msg)
-        self.frame_log.add_text(msg)
-        self._info_text.value = msg
-        self._info_text.update()
-
-    def update_source(self, path: str, update_latest_source: bool = True) -> None:
-        try:
-            self.disable_frames()
-
-            data_holder = get_polars_data_holder(path)
-            self.show_info('Data holder loaded')
-
-            print(f'{data_holder.data_type_internal=}')
-
-            # Validate
-            wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type_internal)
-            self.frame_validate.set_workflow(wflow, data_holder.data_type)
-            self._add_source_to_workflow(wflow)
-            self.show_info('Workflow for validation is set up')
-
-            wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
-
-            # Create
-            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
-            self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
-            self._add_source_to_workflow(wflow)
-            self.show_info('Workflow for creation is set up')
-
-            wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
-
-            # if not self.frame_config.env:
-            #     self.frame_config.env =
-
-        except Exception:
-            raise
-        finally:
-            self.enable_frames()
-
-    def _add_source_to_workflow(self, wflow: workflow.SHARKadmWorkflow):
-        path = self.frame_source.source_path
-        if not path:
-            wflow.set_data_sources()
-        else:
-            wflow.set_data_sources(path)
-
-    def import_user_saves(self):
-        config_saves.import_saves(self)
-        self.frame_source.import_user_saves()
-        self.page.window.width = user_saves.get("page_window_width")
-        self.page.window.height = user_saves.get("page_window_height")
-        self.update_page()
-
+    #
+    #
+    # def _on_show_info(self, msg: str = '') -> None:
+    #     self._add_to_log_file(msg)
+    #     self.frame_log.add_text(msg)
+    #     self._info_text.value = msg
+    #     self._info_text.update()
+    #
+    # def update_source(self, path: str, update_latest_source: bool = True) -> None:
+    #     try:
+    #         self.disable_frames()
+    #
+    #         data_holder = get_polars_data_holder(path)
+    #         self._on_show_info('Data holder loaded')
+    #
+    #         print(f'{data_holder.data_type_internal=}')
+    #
+    #         # Validate
+    #         wflow = workflow.get_dv_validation_workflow_for_data_type(data_holder.data_type_internal)
+    #         self.frame_validate.set_workflow(wflow, data_holder.data_type)
+    #         self._add_source_to_workflow(wflow)
+    #         self._on_show_info('Workflow for validation is set up')
+    #
+    #         wflow.save_config(utils.USER_DIR / 'test_validate_workflow.yaml')
+    #
+    #         # Create
+    #         wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
+    #         self.frame_create_zip.set_workflow(wflow, data_holder.data_type)
+    #         self._add_source_to_workflow(wflow)
+    #         self._on_show_info('Workflow for creation is set up')
+    #
+    #         wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
+    #
+    #         # if not self.frame_config.env:
+    #         #     self.frame_config.env =
+    #
+    #     except Exception:
+    #         raise
+    #     finally:
+    #         self.enable_frames()
+    #
+    # def _add_source_to_workflow(self, wflow: workflow.SHARKadmWorkflow):
+    #     path = self.frame_source.source_path
+    #     if not path:
+    #         wflow.set_data_sources()
+    #     else:
+    #         wflow.set_data_sources(path)
+    #
+    # def import_user_saves(self):
+    #     config_saves.import_saves(self)
+    #     self.frame_source.import_user_saves()
+    #     self.page.window.width = user_saves.get("page_window_width")
+    #     self.page.window.height = user_saves.get("page_window_height")
+    #     self.update_page()
+    #
     def _save_layout(self):
         user_saves.add_settings(
             page_window_width=self.page.window.width,
             page_window_height=self.page.window.height,
         )
         user_saves.export_saves()
-
-    def _add_controls_to_save(self):
-        pass
+    #
+    # def _add_controls_to_save(self):
+    #     pass
 
         # creator_saves.add_control('page_add_archive._option_update_zip_archives', self.page_add_archive._option_update_zip_archives)
         # creator_saves.add_control('page_add_archive._option_copy_zip_archives_to_sharkdata', self.page_add_archive._option_copy_zip_archives_to_sharkdata)

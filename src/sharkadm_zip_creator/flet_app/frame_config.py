@@ -5,18 +5,20 @@ import flet as ft
 import sharkadm.utils
 from sharkadm import utils as sharkadm_utils
 from sharkadm import adm_logger
+from dataclasses import dataclass
+from typing import Any
 
 from sharkadm_zip_creator.flet_app.saves import config_saves
 
 if not sharkadm.config.has_admin_config():
     adm_logger.log_workflow('You should really have admin configuration setup to run sharkadm_zip_creator! Just fix it!', level=adm_logger.ERROR)
 
-
+@dataclass
 class FrameConfig(ft.Row):
+    main_app: Any = None
 
-    def __init__(self, main_app):
-        super().__init__()
-        self.main_app = main_app
+    def init(self):
+
         self._config_paths = set()
 
         self.controls.append(ft.Row([

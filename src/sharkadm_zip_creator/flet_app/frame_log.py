@@ -1,18 +1,20 @@
+from typing import Any
+
 import flet as ft
 from sharkadm_zip_creator.flet_app import utils
 from sharkadm import utils as sharkadm_utils
+from dataclasses import dataclass
 
 
+@dataclass
 class FrameLog(ft.Row):
+    main_app: Any = None
+    lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
+    expand = True
 
-    def __init__(self, main_app):
-        super().__init__()
-        self.main_app = main_app
-
-        self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
-        self.expand = True
+    def init(self):
         col = ft.Column([
-            ft.ElevatedButton(text='Öppna mappen med loggar', on_click=self._open_log_directory),
+            ft.ElevatedButton("Öppna mappen med loggar", on_click=self._open_log_directory),
             self.lv
         ], expand=True)
 
