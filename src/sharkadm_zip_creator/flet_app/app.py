@@ -202,8 +202,16 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             source_type=str(self.source_type.source),
         )
 
+        self._dialog_title = ft.Text()
         self._dialog_text = ft.Text()
-        self._dlg = ft.AlertDialog(title=self._dialog_text)
+
+        self._dlg = ft.AlertDialog(
+            title=self._dialog_title,
+            content=self._dialog_text,
+            alignment=ft.Alignment.CENTER,
+            on_dismiss=self._on_close_dialog,
+            title_padding=ft.Padding.all(25),
+        )
 
         self._info_text = ft.Text("Det här är infotext....som kommer att ändras när det händer något...", bgcolor='gray')
         print(f"_build_components: {id(self._info_text)=}")
@@ -310,11 +318,12 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._progress_text.update()
         self._progress_bar.update()
 
-    def _on_show_dialog(self, text: str):
-        print()
-        print(f"{text=}")
-        self._on_show_info(text)
-        self._dialog_text.value = text
+    def _on_show_dialog(self, data: dict) -> None:
+        title = data.get("title", "Det här är något som kan vara bra att veta")
+        msg = data.get("msg", "Här borde det stå något annat förmodligen...")
+        self._on_show_info(msg)
+        self._dialog_title.value = title
+        self._dialog_text.value = msg
         self._open_dlg()
 
     def _on_show_info(self, msg: str = '') -> None:
@@ -339,9 +348,13 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._on_show_info(text)
 
     def _open_dlg(self, *args):
-        self.page.dialog = self._dlg
-        self._dlg.open = True
-        self.update_page()
+        self.page.show_dialog(self._dlg)
+        # self.page.dialog = self._dlg
+        # self._dlg.open = True
+        # self.update_page()
+
+    def _on_close_dialog(self, *args):
+        print("Closing dialog")
 
     def _on_app_event(self, *args):
         self._save_layout()

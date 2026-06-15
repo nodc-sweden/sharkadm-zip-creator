@@ -161,20 +161,48 @@ class FrameCreateSingleZip(ft.Container):
 
     def _start_workflow(self):
         def run():
-            result = self._workflow.start_workflow()
-            self.page.run_task(self._on_workflow_done, result)
+            result = None
+            error = None
+
+            try:
+                result = self._workflow.start_workflow()
+            except Exception as e:
+                error = e
+
+            finally:
+                self.page.run_task(self._on_workflow_done, result, error)
 
         threading.Thread(target=run, daemon=True).start()
 
-    async def _on_workflow_done(self, result):
+    async def _on_workflow_done(self, result, error):
+        if error:
+            event.post_event(event.Events.SHOW_DIALOG, str(error))
+            self._enable()
+            return
+
+        event.post_event(event.Events.SHOW_INFO, str(result))
         self._enable()
 
-        if result:
-            print("Workflow finished with result:", result)
-            # visa dialog eller logga
-            event.post_event(event.Events.SHOW_INFO, str(result))
+        data = dict()
+        if error:
+            data["title"] = "Något gick fel..."
+            data["msg"] = str(error)
+        elif result:
+            data["title"] = "Något kanske gick fel..."
+            data["msg"] = str(result)
+        else:
+            if self._dialog_messages:
+                data["title"] = "Allt klart!"
+                data["msg"] = "\n".join(self._dialog_messages)
+            else:
+                data["title"] = "Allt klart!"
+                data["msg"] = data["title"]
+        event.post_event(event.Events.SHOW_DIALOG, data)
+        self.main_app.reset_progress()
+        saves.config_saves.export_saves()
+        self.save_export_options()
 
-        # self.page.update()
+
 
     def _disable(self):
         event.post_event(event.Events.DISABLE, dict())
@@ -211,30 +239,23 @@ class FrameCreateSingleZip(ft.Container):
             return
         try:
             self._disable()
-            info = self._start_workflow()
-            if info:
-                failed_msg = str(info.exception)
-            else:
-                saves.config_saves.export_saves()
-                self.save_export_options()
+            self._start_workflow()
+            # if info:
+            #     failed_msg = str(info.exception)
+            # else:
+            #     saves.config_saves.export_saves()
+            #     self.save_export_options()
         except Exception as e:
             failed_msg = str(e)
+            print(f"{failed_msg=}")
             pass
             # raise
         # self._enable()
-        self.main_app.reset_progress()
-        if failed_msg:
-            event.post_event(event.Events.SHOW_DIALOG, failed_msg)
-        else:
-            if self._dialog_messages:
-                msg = f"Allt klart!\n" + "\n".join(self._dialog_messages)
-                event.post_event(event.Events.SHOW_DIALOG, msg)
-            else:
-                event.post_event(event.Events.SHOW_DIALOG, "Allt klart!")
-        print("Creating zip!")
-        print(f"{self.page=}")
-        print(f"{self.main_app=}")
-        print(f"{self.main_app.state=}")
+
+        # print("Creating zip!")
+        # print(f"{self.page=}")
+        # print(f"{self.main_app=}")
+        # print(f"{self.main_app.state=}")
 
     def run_exporter(self, **kwargs) -> None:
         if not self._workflow:
