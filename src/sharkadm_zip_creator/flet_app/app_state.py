@@ -30,7 +30,7 @@ class State(ABC):
 
 @dataclass
 class ProdState(State):
-    visible: tuple[str, ...] = ("single_zip", )
+    # visible: tuple[str, ...] = ("single_zip", )
     state: States = States.PROD
     test_text: str = "Testtext för PROD"
     app_title: str = "Zip archive creator (prod)"
@@ -45,7 +45,7 @@ class ProdState(State):
 
 @dataclass
 class TestState(State):
-    visible: tuple[str, ...] = ("temp",)
+    # visible: tuple[str, ...] = ("temp",)
     state: States = States.TEST
     test_text: str = "Testtext för TEST"
     app_title: str = "Zip archive creator (test)"

@@ -66,8 +66,8 @@ class FrameCreateSingleZip(ft.Container):
         )
 
         self.content = ft.Column([
-            config_path_row,
             self.data_source,
+            config_path_row,
             ft.Row([
                 self.operators_component,
                 self.workflow_options_component,
@@ -143,22 +143,6 @@ class FrameCreateSingleZip(ft.Container):
         options = user_saves.get('post_workflow_exports', [])
         self.post_export_options_component.update_workflow_export_options(options)
 
-    # def _start_workflow(self) -> Any:
-    #     return threading.Thread(
-    #         target=self._workflow.start_workflow,
-    #         daemon=True
-    #     ).start()
-
-    # def _start_workflow(self, on_done=None) -> None:
-    #     def run():
-    #         try:
-    #             self._workflow.start_workflow()
-    #         finally:
-    #             if on_done:
-    #                 on_done()
-    #
-    #     threading.Thread(target=run, daemon=True).start()
-
     def _start_workflow(self):
         def run():
             result = None
@@ -202,8 +186,6 @@ class FrameCreateSingleZip(ft.Container):
         saves.config_saves.export_saves()
         self.save_export_options()
 
-
-
     def _disable(self):
         event.post_event(event.Events.DISABLE, dict())
         self.data_source.disabled = True
@@ -221,16 +203,6 @@ class FrameCreateSingleZip(ft.Container):
     def on_create_zip(self, e: ft.Event[ft.Button]) -> None:
         self._dialog_messages = []
         print("on_create_zip!")
-        # print()
-        # print("="*100)
-        # print(f"{event._subscribers=}")
-        # print("-" * 100)
-        # for key, value in event._subscribers.items():
-        #     print(f"{key=}: {value=}")
-        # print("-" * 100)
-        # print()
-        # self.main_app._on_show_info(msg)
-        failed_msg = ""
         if not self._workflow:
             event.post_event(event.Events.SHOW_INFO, "Ingen fil vald!")
             return
@@ -240,22 +212,9 @@ class FrameCreateSingleZip(ft.Container):
         try:
             self._disable()
             self._start_workflow()
-            # if info:
-            #     failed_msg = str(info.exception)
-            # else:
-            #     saves.config_saves.export_saves()
-            #     self.save_export_options()
         except Exception as e:
             failed_msg = str(e)
             print(f"{failed_msg=}")
-            pass
-            # raise
-        # self._enable()
-
-        # print("Creating zip!")
-        # print(f"{self.page=}")
-        # print(f"{self.main_app=}")
-        # print(f"{self.main_app.state=}")
 
     def run_exporter(self, **kwargs) -> None:
         if not self._workflow:

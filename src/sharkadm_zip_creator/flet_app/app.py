@@ -158,7 +158,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             self.state.set_to_test()
         self._latest_state = self.state.state
         # user_saves.import_saves()
-        self.page.title = self.state.app_title
         self.update_layout()
 
     def _on_change_source_type(self, data: dict) -> None:
@@ -167,7 +166,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         elif data.get('source_type') == app_source.SourceType.MULTIPLE:
             self.source_type.set_to_multiple()
         # user_saves.import_saves()
-        self.page.title = self.state.app_title
         self.update_layout()
 
     def disable(self, *args, **kwargs):
@@ -186,6 +184,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         # event.clear_subscribers()
         self._build_components()
         self._build_layout()
+        self._update_layout()
         self.update_page()
 
     def update_layout(self):
@@ -230,18 +229,12 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             print(f"1: {id(self._frame_create_single_zip)=}")
         self._frame_create_single_zip = FrameCreateSingleZip(visible=self.source_type.source == SourceType.SINGLE, main_app=self)
         self._frame_create_multiple_zip = FrameCreateMultipleZip(visible=self.source_type.source == SourceType.MULTIPLE)
-        if hasattr(self, "_frame_create_single_zip"):
-            # print(f"2: {self._frame_create_single_zip=}")
-            print(f"2: {id(self._frame_create_single_zip)=}")
+        # if hasattr(self, "_frame_create_single_zip"):
+        #     # print(f"2: {self._frame_create_single_zip=}")
+        #     print(f"2: {id(self._frame_create_single_zip)=}")
 
         self._frame_create_single_zip.state = self.state
         self._frame_create_multiple_zip.state = self.state
-
-        self._frame_temp = ft.Column([ft.Text("testar detta")])
-
-        self._frame_create_single_zip.visible = self.state.is_visible("single_zip")
-        self._frame_temp.visible = self.state.is_visible("temp")
-
 
         self._tabs = ft.Tabs(
             length=2,
@@ -266,8 +259,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                             #     alignment=ft.Alignment.CENTER,
                                 content=ft.Column([
                                     self._frame_create_single_zip,
-                                    self._frame_temp,
-
+                                    self._frame_create_multiple_zip,
         # self._frame_create_multiple_zip,
                                 ], expand=True),
                                 expand=True,
@@ -288,7 +280,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         print("BUILDING LAYOUT")
         self._main_column = ft.Column([
             self.config_component,
-                ft.Text(self.state.test_text),
                 self._tabs,
                 ft.Divider(),
                 self._info_text,
@@ -297,8 +288,9 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self.page.add(self._main_column)
 
     def _update_layout(self):
-        self._frame_create_single_zip.visible = self.state.is_visible("single_zip")
-        self._frame_temp.visible = self.state.is_visible("temp")
+        self.page.title = self.state.app_title
+        self._frame_create_single_zip.visible = self.source_type.is_visible(app_source.VISIBLE.SINGLE_ZIP)
+        self._frame_create_multiple_zip.visible = self.source_type.is_visible(app_source.VISIBLE.MULTIPLE_ZIP)
 
     def _on_progress(self, data: dict) -> None:
         current = data.get('current', 1)

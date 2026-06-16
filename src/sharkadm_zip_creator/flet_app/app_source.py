@@ -9,9 +9,15 @@ class SourceType(StrEnum):
     MULTIPLE = auto()
 
 
+class VISIBLE(StrEnum):
+    SINGLE_ZIP = auto()
+    MULTIPLE_ZIP = auto()
+
+
 @dataclass
 class Source(ABC):
     app: "AppSource" = field(repr=False)
+    visible: tuple[str, ...] = ()
     source: SourceType = None
     test_text: str = "Singletext utan source"
 
@@ -21,9 +27,13 @@ class Source(ABC):
     @abstractmethod
     def set_to_single(self) -> None: ...
 
+    def is_visible(self, name: str) -> bool:
+        return name in self.visible
+
 
 @dataclass
 class MultipleSource(Source):
+    visible: tuple[str, ...] = (VISIBLE.MULTIPLE_ZIP, )
     source: SourceType = SourceType.MULTIPLE
     test_text: str = "Source för MULTIPLE"
 
@@ -36,6 +46,7 @@ class MultipleSource(Source):
 
 @dataclass
 class SingleSource(Source):
+    visible: tuple[str, ...] = (VISIBLE.SINGLE_ZIP, )
     source: SourceType = SourceType.SINGLE
     test_text: str = "Source för SINGLE"
 

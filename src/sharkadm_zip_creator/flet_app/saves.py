@@ -21,6 +21,7 @@ class Environment(StrEnum):
 class UserSavesKeys(StrEnum):
     ZIP_TARGET_DIRECTORY = auto()
     LATEST_SINGLE_DATA_SOURCE = auto()
+    LATEST_MULTIPLE_DATA_SOURCE_ROOT = auto()
 
 
 class ConfigSaves:

@@ -87,7 +87,8 @@ class SingleDataSourceComponent(ft.Row):
         event.post_event(event.Events.CHANGE_SINGLE_DATA_SOURCE, dict(path=Path(self._latest_source_path.value)))
 
     def _on_load_latest_data_source(self, e: ft.Event[ft.Button]):
-        path = user_saves.get(UserSavesKeys.LATEST_SINGLE_DATA_SOURCE)
+        # path = user_saves.get(UserSavesKeys.LATEST_SINGLE_DATA_SOURCE)
+        path = self._latest_source_path.value
         if not path:
             return
         if not Path(path).exists():
