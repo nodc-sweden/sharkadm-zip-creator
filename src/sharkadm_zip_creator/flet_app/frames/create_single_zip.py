@@ -9,7 +9,7 @@ from sharkadm.data import get_polars_data_holder
 from sharkadm_zip_creator.flet_app import event, utils, saves
 from flet_app.components import WorkflowOptionsComponent, SingleDataSourceComponent, PostWorkflowExportOptionsComponent
 from flet_app.components.operators_list import ListOperatorsComponent
-from flet_app.saves import user_saves
+from sharkadm_zip_creator.flet_app.saves import user_saves
 
 
 # @ft.control
@@ -137,7 +137,7 @@ class FrameCreateSingleZip(ft.Container):
             'post_workflow_exports': self.post_export_options_component.workflow_export_options}
         user_saves.add_settings(**data)
         # user_saves.set_main_app(self.main_app)
-        user_saves.export_saves()
+        # user_saves.export_saves()
 
     def _load_export_options(self):
         options = user_saves.get('post_workflow_exports', [])
@@ -183,7 +183,7 @@ class FrameCreateSingleZip(ft.Container):
                 data["msg"] = data["title"]
         event.post_event(event.Events.SHOW_DIALOG, data)
         self.main_app.reset_progress()
-        saves.config_saves.export_saves()
+        # saves.config_saves.export_saves()
         self.save_export_options()
 
     def _disable(self):
@@ -204,10 +204,10 @@ class FrameCreateSingleZip(ft.Container):
         self._dialog_messages = []
         print("on_create_zip!")
         if not self._workflow:
-            event.post_event(event.Events.SHOW_INFO, "Ingen fil vald!")
+            event.post_event(event.Events.SHOW_INFO, dict(title="Ingen fil vald!"))
             return
         if not self.data_source.source_path:
-            event.post_event(event.Events.SHOW_INFO, "Sökväg till zip-paketen saknas!")
+            event.post_event(event.Events.SHOW_INFO, dict(title="Sökväg till zip-paketen saknas!"))
             return
         try:
             self._disable()
@@ -222,7 +222,7 @@ class FrameCreateSingleZip(ft.Container):
         try:
             self._workflow.export(**kwargs)
         except sharkadm_exceptions.DataHolderError:
-            self.main_app.show_info('Detta kan endast göras efter du skapat zip-paket')
+            self.main_app.show_info(dict(title='Detta kan endast göras efter du skapat zip-paket'))
         finally:
             self.save_export_options()
 

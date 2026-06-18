@@ -20,6 +20,8 @@ class Environment(StrEnum):
 
 class UserSavesKeys(StrEnum):
     ZIP_TARGET_DIRECTORY = auto()
+    LATEST_STATE = auto()
+    LATEST_SOURCE_TYPE = auto()
     LATEST_SINGLE_DATA_SOURCE = auto()
     LATEST_MULTIPLE_DATA_SOURCE_ROOT = auto()
 
@@ -117,9 +119,10 @@ class UserSaves:
         # print()
         # print(f"add_settings: {self._settings=}")
         self._settings.update(kwargs)
+        self.export_saves()
 
     def export_saves(self) -> None:
-        # print(f"SAVING: {self._settings=} to {self.save_path=}")
+        print(f"SAVING: {self._settings=} to {self.save_path=}")
         with open(self.save_path, 'w') as fid:
             yaml.safe_dump(self._settings, fid)
 
@@ -130,18 +133,24 @@ class UserSaves:
         with open(self.save_path) as fid:
             self._settings = yaml.safe_load(fid)
 
-    def set(self, key: UserSavesKeys, value: Any) -> None:
+    def set(self, key: UserSavesKeys, value: Any, state_sensitive: bool = False) -> None:
         if isinstance(value, pathlib.Path):
             value = str(value)
-        self._settings[str(key)] = value
+        self._settings[str(self._fix_key(key, state_sensitive))] = value
+        print(f"{self._settings=}")
         self.export_saves()
 
-    def get(self, key: str, default: Any = None) -> None:
+    def get(self, key: str, default: Any = None, state_sensitive: bool = False) -> None:
         # print()
         # print("get")
         # print(f"{key=}: {default=}")
         # print
-        return self._settings.get(key, default)
+        return self._settings.get(self._fix_key(key, state_sensitive), default)
+
+    def _fix_key(self, key: str, state_sensitive: bool) -> str:
+        if not state_sensitive:
+            return key
+        return f"{self._main_app.state.state}_{key}"
 
 
 config_saves = ConfigSaves()

@@ -9,6 +9,7 @@ import flet as ft
 class SingleFilePickerButton(ft.Row):
     title: str = ""
     on_pick: Callable = None
+    initial_directory: str = ""
     dialog_title: str = ""
     allowed_extensions: list | None = None
 
@@ -25,13 +26,16 @@ class SingleFilePickerButton(ft.Row):
     async def handle_pick_file(self, e: ft.Event[ft.Control]):
         file = await ft.FilePicker().pick_files(
             allow_multiple=False,
+            initial_directory=self.initial_directory,
             allowed_extensions=self.allowed_extensions or [],
             dialog_title=self.dialog_title or self.title
         )
         if not file:
             return
+        path = Path(file[0].path)
+        self.initial_directory = str(path.parent)
         if self.on_pick:
-            self.on_pick(Path(file[0].path))
+            self.on_pick(path)
 
 
 @dataclass
@@ -87,6 +91,7 @@ class DirectoryPickerButton(ft.Row):
         )
         if not directory:
             return
+        self.initial_directory = directory
         if self.on_pick:
             self.on_pick(Path(directory))
 

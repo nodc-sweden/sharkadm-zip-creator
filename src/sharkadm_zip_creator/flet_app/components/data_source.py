@@ -40,9 +40,13 @@ class SourceTypeComponent(ft.Row):
 class SingleDataSourceComponent(ft.Row):
 
     def init(self):
+        self._latest_source_path = ft.Text()
+        self._latest_source_path.value = user_saves.get(UserSavesKeys.LATEST_SINGLE_DATA_SOURCE, "")
+
         self._pick_file_button = widgets.SingleFilePickerButton(
             title="Välj en datakälla från FIL",
             on_pick=self._on_pick_new_source,
+            initial_directory=self._latest_source_path.value,
             dialog_title="Välj en fil",
             allowed_extensions=["xlsx", "txt"],
         )
@@ -52,8 +56,6 @@ class SingleDataSourceComponent(ft.Row):
             dialog_title="Välj en mapp",
         )
 
-        self._latest_source_path = ft.Text()
-        self._latest_source_path.value = user_saves.get(UserSavesKeys.LATEST_SINGLE_DATA_SOURCE, "")
 
         self.controls = [
             self._pick_file_button,

@@ -21,6 +21,7 @@ from sharkadm_zip_creator.flet_app import utils
 
 USER_DIR = utils.USER_DIR
 SAVES_PATH = utils.SAVES_PATH
+from sharkadm_zip_creator.flet_app import saves
 from sharkadm_zip_creator.flet_app.saves import user_saves
 
 from sharkadm_zip_creator.flet_app import event
@@ -43,7 +44,12 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         user_saves.set_main_app(self)
         user_saves.import_saves()
 
-        self._latest_state = app_state.States.TEST
+        self._on_change_state(dict(state=user_saves.get(saves.UserSavesKeys.LATEST_STATE, str(app_state.States.TEST))),
+                              update=False)
+
+        self._on_change_source_type(dict(source_type=user_saves.get(saves.UserSavesKeys.LATEST_SOURCE_TYPE, str(app_source.SourceType.SINGLE))),
+                              update=False)
+
         print(f"ZipArchiveCreatorGUI: {threading.current_thread().name=}")
 
         self.page = None
@@ -150,23 +156,28 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             self._info_text.value = f"{level}: {msg}"
             self.page.update()
 
-    def _on_change_state(self, data: dict) -> None:
+    def _on_change_state(self, data: dict, update: bool = True) -> None:
         print("CHANGING STATE")
         if data.get('state') == app_state.States.PROD:
             self.state.set_to_prod()
         elif data.get('state') == app_state.States.TEST:
             self.state.set_to_test()
         self._latest_state = self.state.state
+        user_saves.set(saves.UserSavesKeys.LATEST_STATE, str(self._latest_state))
         # user_saves.import_saves()
-        self.update_layout()
+        if update:
+            self.update_layout()
 
-    def _on_change_source_type(self, data: dict) -> None:
+    def _on_change_source_type(self, data: dict, update: bool = True) -> None:
         if data.get('source_type') == app_source.SourceType.SINGLE:
             self.source_type.set_to_single()
         elif data.get('source_type') == app_source.SourceType.MULTIPLE:
             self.source_type.set_to_multiple()
+        self._latest_source_type = self.source_type.source
+        user_saves.set(saves.UserSavesKeys.LATEST_SOURCE_TYPE, str(self._latest_source_type))
         # user_saves.import_saves()
-        self.update_layout()
+        if update:
+            self.update_layout()
 
     def disable(self, *args, **kwargs):
         self.config_component.disabled = True
@@ -280,10 +291,11 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         print("BUILDING LAYOUT")
         self._main_column = ft.Column([
             self.config_component,
-                self._tabs,
-                ft.Divider(),
-                self._info_text,
-                self._progress_row,
+            ft.Divider(),
+            self._tabs,
+            ft.Divider(),
+            self._info_text,
+            self._progress_row,
         ], expand=True)
         self.page.add(self._main_column)
 
@@ -304,7 +316,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._progress_text.update()
         self._progress_bar.update()
 
-    def reset_progress(self):
+    def reset_progress(self, data: dict | None = None) -> None:
         self._progress_text.value = ''
         self._progress_bar.value = 0
         self._progress_text.update()
@@ -415,7 +427,35 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             page_window_width=self.page.window.width,
             page_window_height=self.page.window.height,
         )
-        user_saves.export_saves()
+
+        # import asyncio
+        # import flet as ft
+        #
+        # class Countdown(ft.Text):
+        #     def __init__(self, seconds):
+        #         super().__init__()
+        #         self.seconds = seconds
+        #
+        #     def did_mount(self):
+        #         self.running = True
+        #         self.page.run_task(self.update_timer)
+        #
+        #     def will_unmount(self):
+        #         self.running = False
+        #
+        #     async def update_timer(self):
+        #         while self.seconds and self.running:
+        #             mins, secs = divmod(self.seconds, 60)
+        #             self.value = "{:02d}:{:02d}".format(mins, secs)
+        #             self.update()
+        #             await asyncio.sleep(1)
+        #             self.seconds -= 1
+        #
+        # def main(page: ft.Page):
+        #     page.add(Countdown(120), Countdown(60))
+        #
+        # ft.run(main)
+        # user_saves.export_saves()
     #
     # def _add_controls_to_save(self):
     #     pass
