@@ -8,7 +8,8 @@ import flet as ft
 import time
 from openpyxl.worksheet import controls
 from sharkadm import event as sharkadm_event
-from sharkadm.sharkadm_logger import adm_logger
+from sharkadm.sharkadm_logger import adm_logger, create_xlsx_report
+from sharkadm.workflow import SHARKadmWorkflow
 
 from flet_app import app_source
 from flet_app.app_source import SourceType
@@ -54,12 +55,16 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
 
         self.page = None
 
+        self._current_workflow: SHARKadmWorkflow | None = None
+
         sharkadm_event.subscribe(sharkadm_event.Events.LOG_WORKFLOW, self._on_log_workflow)
         sharkadm_event.subscribe(sharkadm_event.Events.LOG_PROGRESS, self._on_progress)
 
         # event.subscribe(event.Events.SHOW_INFO, self._on_change_state, prio=5) # test
         event.subscribe(event.Events.SHOW_INFO, self._on_show_info)
+        event.subscribe(event.Events.SHOW_ON_LOG_FRAME, self._on_show_on_log_frame)
         event.subscribe(event.Events.SHOW_DIALOG, self._on_show_dialog)
+        event.subscribe(event.Events.SHOW_TRANSFORM_DIALOG, self._on_show_transform_dialog)
         event.subscribe(event.Events.RESET_PROGRESS, self.reset_progress)
         event.subscribe(event.Events.CHANGE_STATE, self._on_change_state, prio=5)
         event.subscribe(event.Events.CHANGE_SOURCE_TYPE, self._on_change_source_type, prio=5)
@@ -203,15 +208,106 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._update_layout()
         self.update_page()
 
+    def _build_transform_dialog(self):
+        self._alert_transform_levels = dict()
+        controls = []
+        for level in (adm_logger.DEBUG, adm_logger.INFO, adm_logger.WARNING):
+            self._alert_transform_levels[level] = ft.Checkbox(label=str(level).upper())
+            controls.append(self._alert_transform_levels[level])
+        self._alert_transform_levels[adm_logger.WARNING].value = True
+        level_checkboxes = ft.Column(controls)
 
-    def _build_components(self):
-        print("BUILDING")
-
-        self.config_component = ConfigComponent(
-            state=str(self.state.state),
-            source_type=str(self.source_type.source),
+        self._transform_dialog_title = ft.Text()
+        self._transform_dialog_text = ft.Text(
+            selectable=True,
         )
 
+        self._transform_dlg = ft.AlertDialog(
+            modal=True,
+            title=self._transform_dialog_title,
+
+            # ALLT innehåll läggs här
+            content=ft.Container(
+                content=ft.Column(
+                    [
+                        # SCROLLBAR DEL
+                        ft.Container(
+                            width=400,
+                            expand=True,
+                            border=ft.Border.all(1),
+
+                            content=ft.ListView(
+                                controls=[
+                                    self._transform_dialog_text
+                                ],
+                                expand=True,
+                                spacing=10,
+                                auto_scroll=False,
+                            ),
+                        ),
+
+                        ft.Divider(),
+
+                        # FAST DEL
+                        ft.Text("Välj loggnivåer:"),
+
+                        level_checkboxes,
+
+                        ft.Row(
+                            [
+                                ft.Button(
+                                    "Öppna log",
+                                    on_click=self._on_ok_create_transform_dialog_log,
+                                ),
+                                ft.Button(
+                                    "Stäng",
+                                    on_click=self._on_close_transform_dialog,
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.END,
+                        ),
+                    ],
+                    expand=True,
+                )
+                # content=ft.Column(
+                #     [
+                #         self._transform_dialog_text,
+                #         ft.Divider(),
+                #         ft.Text("Välj loggnivåer:"),
+                #         level_checkboxes,
+                #         ft.Button(
+                #             "Öppna log",
+                #             on_click=self._on_ok_create_transform_dialog_log,
+                #         ),
+                #     ],
+                #     scroll=ft.ScrollMode.AUTO,  # <- gör innehållet skrollbart
+                #     tight=True,
+                # ),
+                # width=400,
+                # height=300,  # viktigt för att scroll ska fungera
+                # padding=10,
+            ),
+
+            # on_dismiss=self._on_close_transform_dialog,
+        )
+
+    def _on_ok_create_transform_dialog_log(self, e):
+        # self._transform_dlg.open = False
+        # self.page.update()
+        self._on_close_transform_dialog()
+        if not self._current_workflow:
+            return
+        print(f"{[str(level) for level, wid in self._alert_transform_levels.items() if wid.value]=}")
+        create_xlsx_report(
+            log_filter=dict(levels=[str(level) for level, wid in self._alert_transform_levels.items() if wid.value]),
+            open_file=True,
+        )
+
+    def _on_close_transform_dialog(self, e = None):
+        self._transform_dlg.open = False
+        self.page.update()
+
+    def _build_general_dialog(self) -> None:
         self._dialog_title = ft.Text()
         self._dialog_text = ft.Text()
 
@@ -222,6 +318,17 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             on_dismiss=self._on_close_dialog,
             title_padding=ft.Padding.all(25),
         )
+
+    def _build_components(self):
+        print("BUILDING")
+        self._build_general_dialog()
+        self._build_transform_dialog()
+
+        self.config_component = ConfigComponent(
+            state=str(self.state.state),
+            source_type=str(self.source_type.source),
+        )
+
 
         self._info_text = ft.Text("Det här är infotext....som kommer att ändras när det händer något...", bgcolor='gray')
         print(f"_build_components: {id(self._info_text)=}")
@@ -328,34 +435,35 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._on_show_info(msg)
         self._dialog_title.value = title
         self._dialog_text.value = msg
-        self._open_dlg()
+        self._open_dlg(self._dlg)
+
+    def _on_show_transform_dialog(self, data: dict) -> None:
+        title = data.get("title", "Det här är något som kan vara bra att veta")
+        msg = data.get("msg", "Här borde det stå något annat förmodligen...")
+        self._current_workflow = data.get("workflow")
+        self._transform_dialog_title.value = title
+        self._transform_dialog_text.value = msg
+        import nodc_station
+        print(f"{nodc_station.get_matching_stations.cache_info()=}")
+        self._open_dlg(self._transform_dlg)
 
     def _on_show_info(self, msg: str = '') -> None:
         self._add_to_log_file(msg)
         self.frame_log.add_text(msg)
         self._info_text.value = msg
-        print(f"{msg=}")
-        # self._info_text.update()
         self._info_text.update()
-        # self.page.update()
-        print(f"_on_show_info: {id(self._info_text)=}")
-        # time.sleep(1)
+
+    def _on_show_on_log_frame(self, msg: str = '') -> None:
+        self.frame_log.add_text(msg)
 
     def _on_log_workflow(self, data: dict) -> None:
         level = data.get('level')
-        # if level == 'debug':
-        #     return
-        # if level in ['warning', 'error']:
-        #     level = level.upper()
         level = level.upper()
         text = f'{level}: {data.get("msg")}'
         self._on_show_info(text)
 
-    def _open_dlg(self, *args):
-        self.page.show_dialog(self._dlg)
-        # self.page.dialog = self._dlg
-        # self._dlg.open = True
-        # self.update_page()
+    def _open_dlg(self, dlg, *args):
+        self.page.show_dialog(dlg)
 
     def _on_close_dialog(self, *args):
         print("Closing dialog")

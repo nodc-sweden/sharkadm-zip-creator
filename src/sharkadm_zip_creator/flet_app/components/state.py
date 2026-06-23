@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Self
 
 import flet as ft
+import sharkadm.utils
 
 from sharkadm_zip_creator.flet_app.app_state import States
 from sharkadm_zip_creator.flet_app import utils
@@ -23,6 +24,8 @@ class StateComponent(ft.Container):
         self._running_check_sync: bool = False
         self._running_auto_check_sync: bool = False
 
+        self._sync_test_tooltip = ft.Tooltip(message="")
+
         self._config: Config | None = None
         self._test_color = "GREEN"
         self._prod_color = "RED"
@@ -42,7 +45,7 @@ class StateComponent(ft.Container):
             ),
             value=str(self.state).upper()
         )
-        self._sync_test_button = ft.Button("Synka test", on_click=self._on_sync_test)
+        self._sync_test_button = ft.Button("Synka test", on_click=self._on_sync_test, tooltip=self._sync_test_tooltip)
         self._auto_sync_test_switch = ft.Switch(label="Synka test automatiskt", on_change=self._on_auto_sync_test)
         self.content = ft.Row([
             self.radio_buttons,
@@ -66,21 +69,32 @@ class StateComponent(ft.Container):
         while self._running_check_sync:
             # old_title = self.
             if not self._config.test_is_synced_with_prod:
+                sharkadm.utils.clear_cache()
+                lines = ["Osynkade filer:"] + list(self._config.unsynced_files)
+                self._sync_test_tooltip.message = "\n".join(lines)
                 self._sync_test_button.content = "Synka test (test är inte uppdaterad)"
-                self._sync_test_button.update()
+                try:
+                    self._sync_test_button.update()
+                except RuntimeError:
+                    pass
             await asyncio.sleep(3)
 
     async def _check_auto_sync(self):
         while self._running_auto_check_sync:
             # old_title = self.
             if not self._config.test_is_synced_with_prod:
-                self._on_sync_test()
+                try:
+                    self._on_sync_test()
+                except RuntimeError:
+                    pass
                 # self._config.sync_test_with_prod()
             await asyncio.sleep(3)
 
 
     def _on_sync_test(self, e: ft.Event[ft.Button] | None = None) -> None:
         self._config.sync_test_with_prod()
+        sharkadm.utils.clear_cache()
+        self._sync_test_tooltip.message = ""
         self._sync_test_button.content = "Synka test"
         self._sync_test_button.update()
 

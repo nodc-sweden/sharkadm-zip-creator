@@ -2,7 +2,7 @@ from pathlib import Path
 
 import flet as ft
 
-from sharkadm.config import get_sharkadm_config
+from sharkadm.config import sharkadm_config
 
 from sharkadm_zip_creator.flet_app import event
 from sharkadm_zip_creator.flet_app import widgets
@@ -17,7 +17,7 @@ class ConfigComponent(ft.Column):
     source_type: str = None
 
     def init(self):
-        self._config = get_sharkadm_config()
+        self._config = sharkadm_config
         self._set_config_state(self.state)
 
 

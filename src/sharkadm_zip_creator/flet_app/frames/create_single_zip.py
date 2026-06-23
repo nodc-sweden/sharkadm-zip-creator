@@ -1,6 +1,7 @@
 import threading
 from dataclasses import dataclass
 from typing import Any
+from sharkadm.config import sharkadm_config
 
 import flet as ft
 from sharkadm import workflow, sharkadm_exceptions
@@ -10,6 +11,9 @@ from sharkadm_zip_creator.flet_app import event, utils, saves
 from flet_app.components import WorkflowOptionsComponent, SingleDataSourceComponent, PostWorkflowExportOptionsComponent
 from flet_app.components.operators_list import ListOperatorsComponent
 from sharkadm_zip_creator.flet_app.saves import user_saves
+from sharkadm import event as sharkadm_event
+from sharkadm.sharkadm_logger import adm_logger
+
 
 
 # @ft.control
@@ -19,6 +23,9 @@ class FrameCreateSingleZip(ft.Container):
     main_app: Any = None
 
     def init(self):
+        self._transformation_logs: list[str] = []
+        sharkadm_event.subscribe(sharkadm_event.Events.LOG_TRANSFORMATION, self._on_log_transformation)
+
         self._workflow: workflow.SHARKadmWorkflow | None = None
         self._workflow_config_path = ft.Text()
         config_path_row = ft.Row([
@@ -31,7 +38,7 @@ class FrameCreateSingleZip(ft.Container):
         self.post_export_options_component = PostWorkflowExportOptionsComponent()
         self.button_create_zip = ft.Button(f"Skapa zip-paket", on_click=self.on_create_zip)
 
-        event.subscribe(event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source)
+        event.subscribe(event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source, prio=75)
 
         self._option_tabs = ft.Tabs(
             length=2,
@@ -100,6 +107,13 @@ class FrameCreateSingleZip(ft.Container):
         #
         # ]
 
+    def _on_log_transformation(self, data: dict[str, Any]) -> None:
+        if data.get("level") not in [adm_logger.WARNING, adm_logger.ERROR, adm_logger.CRITICAL]:
+            return
+        msg = data.get("msg", "")
+        event.post_event(event.Events.SHOW_ON_LOG_FRAME, msg)
+        self._transformation_logs.append(msg)
+
     def _on_change_source(self, data: dict):
         # Disable stuff
         # print()
@@ -107,6 +121,9 @@ class FrameCreateSingleZip(ft.Container):
         # for cont in self.page.controls:
         #     print(f"{cont=}")
         # self._reset_workflow()
+        # print(f"{sharkadm_config.state=}")
+        # print(f"{id(sharkadm_config)=}")
+        # print(f"{sharkadm_config.root_dir=}")
         path = data["path"]
         data_holder = get_polars_data_holder(path)
         wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
@@ -122,7 +139,10 @@ class FrameCreateSingleZip(ft.Container):
 
     def _set_workflow(self, wflow: workflow.SHARKadmWorkflow) -> None:
         self._workflow = wflow
+        print("-"*50)
+        print(f"{self._workflow.path=}")
         self._workflow_config_path.value = str(self._workflow.path)
+        self._workflow_config_path.update()
 
         # wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
         self._load_export_options()
@@ -149,13 +169,18 @@ class FrameCreateSingleZip(ft.Container):
             error = None
 
             try:
+                import time
+                t0 = time.perf_counter()
+                # print(f"{self.workflow_options_component.workflow_options=}")
                 result = self._workflow.start_workflow()
+                print(f"{time.perf_counter()-t0=}")
             except Exception as e:
                 error = e
 
             finally:
                 self.page.run_task(self._on_workflow_done, result, error)
 
+        self._workflow.update_operators(self.workflow_options_component.workflow_options)
         threading.Thread(target=run, daemon=True).start()
 
     async def _on_workflow_done(self, result, error):
@@ -175,13 +200,14 @@ class FrameCreateSingleZip(ft.Container):
             data["title"] = "Något kanske gick fel..."
             data["msg"] = str(result)
         else:
-            if self._dialog_messages:
-                data["title"] = "Allt klart!"
-                data["msg"] = "\n".join(self._dialog_messages)
+            if self._transformation_logs:
+                data["title"] = "Allt klart! Men, ta en titt på det här!"
+                data["msg"] = "\n".join(self._transformation_logs)
+                data["workflow"] = self._workflow
             else:
                 data["title"] = "Allt klart!"
                 data["msg"] = data["title"]
-        event.post_event(event.Events.SHOW_DIALOG, data)
+        event.post_event(event.Events.SHOW_TRANSFORM_DIALOG, data)
         self.main_app.reset_progress()
         # saves.config_saves.export_saves()
         self.save_export_options()
@@ -201,7 +227,7 @@ class FrameCreateSingleZip(ft.Container):
         self.button_create_zip.update()
 
     def on_create_zip(self, e: ft.Event[ft.Button]) -> None:
-        self._dialog_messages = []
+        self._transformation_logs = []
         print("on_create_zip!")
         if not self._workflow:
             event.post_event(event.Events.SHOW_INFO, dict(title="Ingen fil vald!"))
