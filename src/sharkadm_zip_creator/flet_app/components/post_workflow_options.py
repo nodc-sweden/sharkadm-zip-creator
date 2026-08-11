@@ -41,7 +41,7 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         exporters = []
         for exp in incoming_exporters:
             for i, saved_exp in enumerate(self._saved_options[:]):
-                if exp['name'] == saved_exp['name']:
+                if exp["name"] == saved_exp["name"]:
                     updated_exp = {}
                     for key, value in exp.items():
                         updated_exp[key] = saved_exp.get(key, value)
@@ -52,12 +52,11 @@ class PostWorkflowExportOptionsComponent(ft.Container):
                 exporters.append(exp)
         return exporters
 
-    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, color: str = None) -> None:
+    def set_workflow(
+        self, wflow: workflow.SHARKadmWorkflow, color: str | None = None
+    ) -> None:
         self.reset()
-        wid_list = [
-            ft.Text('Exportalternativ efter körning'),
-            ft.Divider(height=9, thickness=3)
-        ]
+        wid_list = [ft.Text(self.label, color="black"), ft.Divider(height=9, thickness=3)]
         # for exp in wflow.exporters:
         for exp in self._get_exporters(wflow.exporters_info):
             wid = operators.PostOperatorCard(operator=exp)
@@ -77,4 +76,3 @@ class PostWorkflowExportOptionsComponent(ft.Container):
 
     def update_workflow_export_options(self, options):
         self._saved_options = options
-

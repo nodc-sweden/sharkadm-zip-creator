@@ -1,13 +1,11 @@
+from pathlib import Path
 from typing import Callable
 
 import flet as ft
-from pathlib import Path
 
-from sharkadm_zip_creator.flet_app import event
-from sharkadm_zip_creator.flet_app import utils
-from sharkadm_zip_creator.flet_app.saves import user_saves, UserSavesKeys
-from sharkadm_zip_creator.flet_app import widgets
+from sharkadm_zip_creator.flet_app import event, widgets
 from sharkadm_zip_creator.flet_app.app_source import SourceType
+from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 
 @ft.control
@@ -15,15 +13,17 @@ class SourceTypeComponent(ft.Row):
     on_change: Callable = None
     source_type: str = None
 
-
     def init(self):
         self.radio_buttons = ft.RadioGroup(
             on_change=self._handle_selection_change,
             content=ft.Row(
-                controls=[ft.Radio(value=str(s).upper(), label=str(s).upper()) for s in SourceType],
+                controls=[
+                    ft.Radio(value=str(s).upper(), label=str(s).upper())
+                    for s in SourceType
+                ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
-            value=str(self.source_type).upper()
+            value=str(self.source_type).upper(),
         )
         # print(f"1: {self.radio_buttons.value=}")
         # self.radio_buttons.value = str(self.source_type).upper()
@@ -38,10 +38,11 @@ class SourceTypeComponent(ft.Row):
 
 @ft.control
 class SingleDataSourceComponent(ft.Row):
-
     def init(self):
         self._latest_source_path = ft.Text()
-        self._latest_source_path.value = user_saves.get(UserSavesKeys.LATEST_SINGLE_DATA_SOURCE, "")
+        self._latest_source_path.value = user_saves.get(
+            UserSavesKeys.LATEST_SINGLE_DATA_SOURCE, ""
+        )
 
         self._pick_file_button = widgets.SingleFilePickerButton(
             title="Välj en datakälla från FIL",
@@ -56,20 +57,19 @@ class SingleDataSourceComponent(ft.Row):
             dialog_title="Välj en mapp",
         )
 
-
         self.controls = [
             self._pick_file_button,
             ft.Text("eller"),
             self._pick_directory_button,
             ft.Text("eller"),
             ft.Row(
-            [
-                ft.Button("Ladda senaste ->",
-                          on_click=self._on_load_latest_data_source)
-                ,
-                self._latest_source_path,
-            ]
-        )
+                [
+                    ft.Button(
+                        "Ladda senaste ->", on_click=self._on_load_latest_data_source
+                    ),
+                    self._latest_source_path,
+                ]
+            ),
         ]
 
     @property
@@ -81,12 +81,14 @@ class SingleDataSourceComponent(ft.Row):
     def _on_pick_new_source(self, path: Path):
         self._set_source(path)
 
-
     def _set_source(self, path: Path | str):
         self._latest_source_path.value = str(path)
         self._latest_source_path.update()
         user_saves.set(UserSavesKeys.LATEST_SINGLE_DATA_SOURCE, path)
-        event.post_event(event.Events.CHANGE_SINGLE_DATA_SOURCE, dict(path=Path(self._latest_source_path.value)))
+        event.post_event(
+            event.Events.CHANGE_SINGLE_DATA_SOURCE,
+            dict(path=Path(self._latest_source_path.value)),
+        )
 
     def _on_load_latest_data_source(self, e: ft.Event[ft.Button]):
         # path = user_saves.get(UserSavesKeys.LATEST_SINGLE_DATA_SOURCE)

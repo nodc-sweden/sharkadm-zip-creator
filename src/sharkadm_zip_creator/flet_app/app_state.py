@@ -1,6 +1,5 @@
-
-from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from enum import StrEnum, auto
 
 
@@ -70,4 +69,3 @@ class AppState:
 
     def set_to_test(self) -> None:
         self.state.set_to_test()
-

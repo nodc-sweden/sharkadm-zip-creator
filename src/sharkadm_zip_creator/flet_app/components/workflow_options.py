@@ -1,5 +1,4 @@
 import flet as ft
-import sharkadm
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants
@@ -43,7 +42,7 @@ class WorkflowOptionsComponent(ft.Container):
         for oper in incoming_operators:
             print(f"{oper=}")
             for i, saved_oper in enumerate(self._saved_options[:]):
-                if oper['name'] == saved_oper['name']:
+                if oper["name"] == saved_oper["name"]:
                     updated_oper = {}
                     for key, value in oper.items():
                         updated_oper[key] = saved_oper.get(key, value)
@@ -59,10 +58,7 @@ class WorkflowOptionsComponent(ft.Container):
 
         operators_info = self._get_show_options_for_operators(wflow)
 
-        wid_list = [
-            ft.Text(self.label),
-            ft.Divider(height=9, thickness=3)
-        ]
+        wid_list = [ft.Text(self.label, color="black"), ft.Divider(height=9, thickness=3)]
         # for exp in wflow.exporters:
         for oper in self._get_operators(operators_info):
             print(f"{oper=}")

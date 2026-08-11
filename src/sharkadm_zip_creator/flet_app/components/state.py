@@ -1,16 +1,11 @@
 import asyncio
-from dataclasses import dataclass
-from typing import Any, Callable, Self
+from typing import Callable, Self
 
 import flet as ft
 import sharkadm.utils
+from sharkadm.config.config import Config
 
 from sharkadm_zip_creator.flet_app.app_state import States
-from sharkadm_zip_creator.flet_app import utils
-from sharkadm_zip_creator.flet_app import event
-from sharkadm_zip_creator.flet_app.saves import config_saves
-from sharkadm_zip_creator.flet_app.saves import user_saves
-from sharkadm.config.config import Config
 
 
 @ft.control
@@ -18,7 +13,6 @@ class StateComponent(ft.Container):
     on_change: Callable = None
     border_radius: int = 20
     state: str = None
-
 
     def init(self):
         self._running_check_sync: bool = False
@@ -40,22 +34,26 @@ class StateComponent(ft.Container):
         self.radio_buttons = ft.RadioGroup(
             on_change=self._handle_selection_change,
             content=ft.Row(
-                controls=[ft.Radio(value=str(s).upper(), label=str(s).upper()) for s in States],
+                controls=[
+                    ft.Radio(value=str(s).upper(), label=str(s).upper()) for s in States
+                ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
-            value=str(self.state).upper()
+            value=str(self.state).upper(),
         )
-        self._sync_test_button = ft.Button("Synka test", on_click=self._on_sync_test, tooltip=self._sync_test_tooltip)
-        self._auto_sync_test_switch = ft.Switch(label="Synka test automatiskt", on_change=self._on_auto_sync_test)
-        self.content = ft.Row([
-            self.radio_buttons,
-            self._sync_test_button,
-            self._auto_sync_test_switch,
-        ])
-        # print(f"1: {self.radio_buttons.value=}")
-        # self.radio_buttons.value = str(self.state).upper()
-        # print(f"2: {self.radio_buttons.value=}")
-        # self.controls = [self.radio_buttons]
+        self._sync_test_button = ft.Button(
+            "Synka test", on_click=self._on_sync_test, tooltip=self._sync_test_tooltip
+        )
+        self._auto_sync_test_switch = ft.Switch(
+            label="Synka test automatiskt", on_change=self._on_auto_sync_test
+        )
+        self.content = ft.Row(
+            [
+                self.radio_buttons,
+                self._sync_test_button,
+                self._auto_sync_test_switch,
+            ]
+        )
 
     def did_mount(self):
         self._running_check_sync = True
@@ -70,7 +68,7 @@ class StateComponent(ft.Container):
             # old_title = self.
             if not self._config.test_is_synced_with_prod:
                 sharkadm.utils.clear_cache()
-                lines = ["Osynkade filer:"] + list(self._config.unsynced_files)
+                lines = ["Osynkade filer:", *self._config.unsynced_files]
                 self._sync_test_tooltip.message = "\n".join(lines)
                 self._sync_test_button.content = "Synka test (test är inte uppdaterad)"
                 try:
@@ -89,7 +87,6 @@ class StateComponent(ft.Container):
                     pass
                 # self._config.sync_test_with_prod()
             await asyncio.sleep(3)
-
 
     def _on_sync_test(self, e: ft.Event[ft.Button] | None = None) -> None:
         self._config.sync_test_with_prod()
@@ -119,73 +116,6 @@ class StateComponent(ft.Container):
     def set_config(self, config: Config) -> Self:
         self._config = config
         return self
-
-
-# @ft.control
-# class SyncStateComponent(ft.Container):
-#     on_change: Callable = None
-#     border_radius: int = 20
-#     state: str = None
-#
-#
-#     def init(self):
-#         self._running_check_sync: bool = False
-#
-#         self._config: Config | None = None
-#         self._test_color = "GREEN"
-#         self._prod_color = "RED"
-#         self._color_mapper = dict(
-#             TEST=self._test_color,
-#             PROD=self._prod_color,
-#         )
-#
-#         self.bgcolor = self._color_mapper[self.state.upper()]
-#         self.padding = ft.Padding(left=10, right=15, bottom=5, top=5)
-#
-#         self.radio_buttons = ft.RadioGroup(
-#             on_change=self._handle_selection_change,
-#             content=ft.Row(
-#                 controls=[ft.Radio(value=str(s).upper(), label=str(s).upper()) for s in States],
-#                 alignment=ft.MainAxisAlignment.CENTER,
-#             ),
-#             value=str(self.state).upper()
-#         )
-#         self._sync_test_button = ft.Button(label="Synka test", on_change=self._on_sync_test)
-#         self._auto_sync_test_switch = ft.Switch(label="Synka test automatiskt", on_change=self._on_auto_sync_test)
-#         self.content = ft.Row([self.radio_buttons])
-#         # print(f"1: {self.radio_buttons.value=}")
-#         # self.radio_buttons.value = str(self.state).upper()
-#         # print(f"2: {self.radio_buttons.value=}")
-#         # self.controls = [self.radio_buttons]
-#
-#     async def _check_sync(self):
-#         while self._running_check_sync:
-#             # old_title = self.
-#             if not self._config.test_is_synced_with_prod:
-#                 pass
-#             await asyncio.sleep(2)
-#
-#
-#     def _on_sync_test(self, e: ft.Event[ft.Button]) -> None:
-#         self._config.sync_test_with_prod()
-#
-#     def _on_auto_sync_test(self, e: ft.Event[ft.Switch]) -> None:
-#         pass
-#
-#     def _handle_selection_change(self, e: ft.Event[ft.RadioGroup]):
-#         self.state = str(e.control.value).lower()
-#         self.bgcolor = self._color_mapper[self.state.upper()]
-#         self.update()
-#
-#         if self.on_change:
-#             self.on_change(dict(value=str(e.control.value).lower()))
-#
-#     def is_isolated(self):
-#         return True
-#
-#     def set_config(self, config: Config) -> Self:
-#         self._config = config
-#         return self
 
 
 class Countdown(ft.Text):

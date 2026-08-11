@@ -1,6 +1,6 @@
-from typing import Callable
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable
 
 import flet as ft
 
@@ -15,9 +15,8 @@ class SingleFilePickerButton(ft.Row):
 
     def init(self):
         self.button = ft.Button(
-            self.title,
-            icon=ft.Icons.UPLOAD_FILE,
-            on_click=self.handle_pick_file)
+            self.title, icon=ft.Icons.UPLOAD_FILE, on_click=self.handle_pick_file
+        )
 
         self.controls = [
             self.button,
@@ -28,7 +27,7 @@ class SingleFilePickerButton(ft.Row):
             allow_multiple=False,
             initial_directory=self.initial_directory,
             allowed_extensions=self.allowed_extensions or [],
-            dialog_title=self.dialog_title or self.title
+            dialog_title=self.dialog_title or self.title,
         )
         if not file:
             return
@@ -47,9 +46,8 @@ class MultipleFilePickerButton(ft.Row):
 
     def init(self):
         self.button = ft.Button(
-            self.title,
-            icon=ft.Icons.UPLOAD_FILE,
-            on_click=self.handle_pick_file)
+            self.title, icon=ft.Icons.UPLOAD_FILE, on_click=self.handle_pick_file
+        )
 
         self.controls = [
             self.button,
@@ -59,7 +57,7 @@ class MultipleFilePickerButton(ft.Row):
         files = await ft.FilePicker().pick_files(
             allow_multiple=True,
             allowed_extensions=self.allowed_extensions or [],
-            dialog_title=self.dialog_title or self.title
+            dialog_title=self.dialog_title or self.title,
         )
         if not files:
             return
@@ -76,9 +74,8 @@ class DirectoryPickerButton(ft.Row):
 
     def init(self):
         self.button = ft.Button(
-            self.title,
-            icon=ft.Icons.UPLOAD_FILE,
-            on_click=self.handle_get_directory_path)
+            self.title, icon=ft.Icons.UPLOAD_FILE, on_click=self.handle_get_directory_path
+        )
 
         self.controls = [
             self.button,

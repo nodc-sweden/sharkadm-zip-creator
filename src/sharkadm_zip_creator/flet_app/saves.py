@@ -1,16 +1,15 @@
 import pathlib
-from typing import Any
 from enum import StrEnum, auto
+from typing import Any
 
 import flet as ft
 import yaml
 from sharkadm import utils
 
-from sharkadm_zip_creator.flet_app import event, app_state
+from sharkadm_zip_creator.flet_app import event
 
-USER_DIR = utils.get_root_directory() / 'zip_archive_creator'
+USER_DIR = utils.get_root_directory() / "zip_archive_creator"
 USER_DIR.mkdir(parents=True, exist_ok=True)
-
 
 
 class Environment(StrEnum):
@@ -40,17 +39,22 @@ class ConfigSaves:
     def present_envs(self) -> list[str]:
         present = []
         for env in Environment:
-            if pathlib.Path(USER_DIR, f'zip_archive_creator_saves_{env}.yaml').exists():
+            if pathlib.Path(USER_DIR, f"zip_archive_creator_saves_{env}.yaml").exists():
                 present.append(env)
         return present
 
     @property
     def save_path(self) -> pathlib.Path:
-        return pathlib.Path(USER_DIR, f'zip_archive_creator_saves_{self._env}.yaml').resolve()
+        return pathlib.Path(
+            USER_DIR, f"zip_archive_creator_saves_{self._env}.yaml"
+        ).resolve()
 
     @property
     def valid_save_paths(self) -> list[pathlib.Path]:
-        return [pathlib.Path(USER_DIR, f'zip_archive_creator_saves_{env}.yaml') for env in Environment]
+        return [
+            pathlib.Path(USER_DIR, f"zip_archive_creator_saves_{env}.yaml")
+            for env in Environment
+        ]
 
     def add_control(self, name: str, control: ft.Control) -> None:
         self._controls[name] = control
@@ -59,7 +63,7 @@ class ConfigSaves:
         data = {}
         for key, cont in self._controls.items():
             data[key] = cont.value
-        with open(self.save_path, 'w') as fid:
+        with open(self.save_path, "w") as fid:
             yaml.safe_dump(data, fid)
 
     def import_saves(self, parent: ft.Control) -> None:
@@ -80,7 +84,7 @@ class ConfigSaves:
             if not hasattr(parent, key):
                 continue
             attr = getattr(parent, key)
-            attr.value = ''
+            attr.value = ""
             attr.update()
 
 
@@ -91,8 +95,12 @@ class UserSaves:
         # print(f"{self._settings=}")
         self.import_saves()
 
-        event.subscribe(event.Events.CHANGE_STATE, self._on_change_state_or_source_type, prio=10)
-        event.subscribe(event.Events.CHANGE_SOURCE_TYPE, self._on_change_state_or_source_type, prio=10)
+        event.subscribe(
+            event.Events.CHANGE_STATE, self._on_change_state_or_source_type, prio=10
+        )
+        event.subscribe(
+            event.Events.CHANGE_SOURCE_TYPE, self._on_change_state_or_source_type, prio=10
+        )
 
         print("-" * 100)
         print("-" * 100)
@@ -113,7 +121,7 @@ class UserSaves:
 
     @property
     def save_path(self) -> pathlib.Path:
-        return pathlib.Path(USER_DIR, f'user_saves.yaml').resolve()
+        return pathlib.Path(USER_DIR, "user_saves.yaml").resolve()
 
     def add_settings(self, **kwargs) -> None:
         # print()
@@ -123,7 +131,7 @@ class UserSaves:
 
     def export_saves(self) -> None:
         print(f"SAVING: {self._settings=} to {self.save_path=}")
-        with open(self.save_path, 'w') as fid:
+        with open(self.save_path, "w") as fid:
             yaml.safe_dump(self._settings, fid)
 
     def import_saves(self) -> None:
@@ -155,4 +163,3 @@ class UserSaves:
 
 config_saves = ConfigSaves()
 user_saves = UserSaves()
-

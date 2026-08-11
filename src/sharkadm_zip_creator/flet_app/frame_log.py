@@ -1,9 +1,10 @@
+from dataclasses import dataclass
 from typing import Any
 
 import flet as ft
-from sharkadm_zip_creator.flet_app import utils
 from sharkadm import utils as sharkadm_utils
-from dataclasses import dataclass
+
+from sharkadm_zip_creator.flet_app import utils
 
 
 @dataclass
@@ -13,10 +14,15 @@ class FrameLog(ft.Row):
     expand = True
 
     def init(self):
-        col = ft.Column([
-            ft.ElevatedButton("Öppna mappen med loggar", on_click=self._open_log_directory),
-            self.lv
-        ], expand=True)
+        col = ft.Column(
+            [
+                ft.ElevatedButton(
+                    "Öppna mappen med loggar", on_click=self._open_log_directory
+                ),
+                self.lv,
+            ],
+            expand=True,
+        )
 
         self.controls.append(col)
 
@@ -34,4 +40,4 @@ class FrameLog(ft.Row):
         self.lv.update()
 
     def add_empty_line(self) -> None:
-        self.add_text('\n')
+        self.add_text("\n")

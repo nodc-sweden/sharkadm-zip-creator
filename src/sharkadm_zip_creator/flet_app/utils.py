@@ -1,23 +1,18 @@
-import os
-from dataclasses import dataclass
-from typing import Any
+import pathlib
 
 from sharkadm import utils
-import pathlib
-import yaml
 
-
-USER_DIR = utils.get_root_directory() / 'zip_archive_creator'
+USER_DIR = utils.get_root_directory() / "zip_archive_creator"
 USER_DIR.mkdir(parents=True, exist_ok=True)
-SAVES_PATH = pathlib.Path(USER_DIR, 'zip_archive_creator_saves.yaml').resolve()
+SAVES_PATH = pathlib.Path(USER_DIR, "zip_archive_creator_saves.yaml").resolve()
 # CUSTOM_SAVES_PATH = pathlib.Path(USER_DIR, 'custom_saves.yaml').resolve()
 
 
 def fix_url_str(url: str) -> str:
-    prefix = 'https://'
-    url = url.strip().replace('\\', '/').strip('/')
+    prefix = "https://"
+    url = url.strip().replace("\\", "/").strip("/")
     if not url:
-        return ''
+        return ""
     if not url.startswith(prefix):
         url = prefix + url
     return url

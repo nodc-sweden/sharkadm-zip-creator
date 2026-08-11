@@ -1,19 +1,21 @@
 import threading
 from dataclasses import dataclass
 from typing import Any
-from sharkadm.config import sharkadm_config
 
 import flet as ft
-from sharkadm import workflow, sharkadm_exceptions
-from sharkadm.data import get_polars_data_holder
-
-from sharkadm_zip_creator.flet_app import event, utils, saves
-from flet_app.components import WorkflowOptionsComponent, SingleDataSourceComponent, PostWorkflowExportOptionsComponent
-from flet_app.components.operators_list import ListOperatorsComponent
-from sharkadm_zip_creator.flet_app.saves import user_saves
 from sharkadm import event as sharkadm_event
+from sharkadm import sharkadm_exceptions, workflow
+from sharkadm.data import get_polars_data_holder
 from sharkadm.sharkadm_logger import adm_logger
 
+from sharkadm_zip_creator.flet_app import event
+from sharkadm_zip_creator.flet_app.components import (
+    PostWorkflowExportOptionsComponent,
+    SingleDataSourceComponent,
+    WorkflowOptionsComponent,
+)
+from sharkadm_zip_creator.flet_app.components.operators_list import ListOperatorsComponent
+from sharkadm_zip_creator.flet_app.saves import user_saves
 
 
 # @ft.control
@@ -24,21 +26,24 @@ class FrameCreateSingleZip(ft.Container):
 
     def init(self):
         self._transformation_logs: list[str] = []
-        sharkadm_event.subscribe(sharkadm_event.Events.LOG_TRANSFORMATION, self._on_log_transformation)
+        sharkadm_event.subscribe(
+            sharkadm_event.Events.LOG_TRANSFORMATION, self._on_log_transformation
+        )
 
         self._workflow: workflow.SHARKadmWorkflow | None = None
         self._workflow_config_path = ft.Text()
-        config_path_row = ft.Row([
-            ft.Text('Konfigurationsfil:'),
-            self._workflow_config_path
-        ], expand=True)
+        config_path_row = ft.Row(
+            [ft.Text("Konfigurationsfil:"), self._workflow_config_path], expand=True
+        )
         self.data_source = SingleDataSourceComponent()
         self.operators_component = ListOperatorsComponent()
         self.workflow_options_component = WorkflowOptionsComponent()
         self.post_export_options_component = PostWorkflowExportOptionsComponent()
-        self.button_create_zip = ft.Button(f"Skapa zip-paket", on_click=self.on_create_zip)
+        self.button_create_zip = ft.Button("Skapa zip-paket", on_click=self.on_create_zip)
 
-        event.subscribe(event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source, prio=75)
+        event.subscribe(
+            event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source, prio=75
+        )
 
         self._option_tabs = ft.Tabs(
             length=2,
@@ -56,9 +61,12 @@ class FrameCreateSingleZip(ft.Container):
                         expand=True,
                         controls=[
                             ft.Container(
-                                content=ft.Column([
-                                    self.workflow_options_component,
-                                ], expand=True),
+                                content=ft.Column(
+                                    [
+                                        self.workflow_options_component,
+                                    ],
+                                    expand=True,
+                                ),
                                 expand=True,
                             ),
                             ft.Container(
@@ -72,17 +80,22 @@ class FrameCreateSingleZip(ft.Container):
             ),
         )
 
-        self.content = ft.Column([
-            self.data_source,
-            config_path_row,
-            ft.Row([
-                self.operators_component,
-                self.workflow_options_component,
-                self.post_export_options_component,
-            ], expand=True),
-            self.button_create_zip,
-
-        ], expand=True)
+        self.content = ft.Column(
+            [
+                self.data_source,
+                config_path_row,
+                ft.Row(
+                    [
+                        self.operators_component,
+                        self.workflow_options_component,
+                        self.post_export_options_component,
+                    ],
+                    expand=True,
+                ),
+                self.button_create_zip,
+            ],
+            expand=True,
+        )
 
         # self.controls = [
         #     config_path_row,
@@ -108,7 +121,11 @@ class FrameCreateSingleZip(ft.Container):
         # ]
 
     def _on_log_transformation(self, data: dict[str, Any]) -> None:
-        if data.get("level") not in [adm_logger.WARNING, adm_logger.ERROR, adm_logger.CRITICAL]:
+        if data.get("level") not in [
+            adm_logger.WARNING,
+            adm_logger.ERROR,
+            adm_logger.CRITICAL,
+        ]:
             return
         msg = data.get("msg", "")
         event.post_event(event.Events.SHOW_ON_LOG_FRAME, msg)
@@ -130,16 +147,14 @@ class FrameCreateSingleZip(ft.Container):
         wflow.set_data_sources(path)
         self._set_workflow(wflow)
 
-
     # def _reset_workflow(self) -> None:
     #     self.operators_component.reset()
     #     self.workflow_options_component.reset()
     #     self.post_export_options_component.reset()
 
-
     def _set_workflow(self, wflow: workflow.SHARKadmWorkflow) -> None:
         self._workflow = wflow
-        print("-"*50)
+        print("-" * 50)
         print(f"{self._workflow.path=}")
         self._workflow_config_path.value = str(self._workflow.path)
         self._workflow_config_path.update()
@@ -153,14 +168,13 @@ class FrameCreateSingleZip(ft.Container):
 
     def save_export_options(self):
         data = {
-            # 'workflow_exports': self.frame_options.workflow_export_options,
-            'post_workflow_exports': self.post_export_options_component.workflow_export_options}
+            "post_workflow_exports":
+                self.post_export_options_component.workflow_export_options
+        }
         user_saves.add_settings(**data)
-        # user_saves.set_main_app(self.main_app)
-        # user_saves.export_saves()
 
     def _load_export_options(self):
-        options = user_saves.get('post_workflow_exports', [])
+        options = user_saves.get("post_workflow_exports", [])
         self.post_export_options_component.update_workflow_export_options(options)
 
     def _start_workflow(self):
@@ -170,8 +184,8 @@ class FrameCreateSingleZip(ft.Container):
 
             try:
                 import time
+
                 t0 = time.perf_counter()
-                # print(f"{self.workflow_options_component.workflow_options=}")
                 result = self._workflow.start_workflow()
                 print(f"{time.perf_counter()-t0=}")
             except Exception as e:
@@ -203,6 +217,7 @@ class FrameCreateSingleZip(ft.Container):
             if self._transformation_logs:
                 data["title"] = "Allt klart! Men, ta en titt på det här!"
                 data["msg"] = "\n".join(self._transformation_logs)
+                data["logs"] = self._transformation_logs
                 data["workflow"] = self._workflow
             else:
                 data["title"] = "Allt klart!"
@@ -233,7 +248,9 @@ class FrameCreateSingleZip(ft.Container):
             event.post_event(event.Events.SHOW_INFO, dict(title="Ingen fil vald!"))
             return
         if not self.data_source.source_path:
-            event.post_event(event.Events.SHOW_INFO, dict(title="Sökväg till zip-paketen saknas!"))
+            event.post_event(
+                event.Events.SHOW_INFO, dict(title="Sökväg till zip-paketen saknas!")
+            )
             return
         try:
             self._disable()
@@ -248,7 +265,8 @@ class FrameCreateSingleZip(ft.Container):
         try:
             self._workflow.export(**kwargs)
         except sharkadm_exceptions.DataHolderError:
-            self.main_app.show_info(dict(title='Detta kan endast göras efter du skapat zip-paket'))
+            self.main_app.show_info(
+                dict(title="Detta kan endast göras efter du skapat zip-paket")
+            )
         finally:
             self.save_export_options()
-

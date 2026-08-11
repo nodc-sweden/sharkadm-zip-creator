@@ -1,6 +1,5 @@
-
-from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from enum import StrEnum, auto
 
 
@@ -33,7 +32,7 @@ class Source(ABC):
 
 @dataclass
 class MultipleSource(Source):
-    visible: tuple[str, ...] = (VISIBLE.MULTIPLE_ZIP, )
+    visible: tuple[str, ...] = (VISIBLE.MULTIPLE_ZIP,)
     source: SourceType = SourceType.MULTIPLE
     test_text: str = "Source för MULTIPLE"
 
@@ -46,7 +45,7 @@ class MultipleSource(Source):
 
 @dataclass
 class SingleSource(Source):
-    visible: tuple[str, ...] = (VISIBLE.SINGLE_ZIP, )
+    visible: tuple[str, ...] = (VISIBLE.SINGLE_ZIP,)
     source: SourceType = SourceType.SINGLE
     test_text: str = "Source för SINGLE"
 
@@ -69,4 +68,3 @@ class AppSource:
 
     def set_to_single(self) -> None:
         self.source_type.set_to_single()
-

@@ -29,11 +29,6 @@ def get_events() -> list[str]:
 
 def subscribe(event: str | Events, func, prio: int = 50) -> None:
     event = str(event)
-    print()
-    print("="*100)
-    print(f"{event=}")
-    print(f"{func=}")
-    print()
     if event not in _subscribers:
         raise EventNotFound(event)
     _subscribers[event].setdefault(prio, [])
