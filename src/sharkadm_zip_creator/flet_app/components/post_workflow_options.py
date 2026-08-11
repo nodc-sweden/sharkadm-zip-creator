@@ -1,29 +1,47 @@
 import flet as ft
-from sharkadm_zip_creator.flet_app import utils
-from sharkadm import utils as sharkadm_utils, workflow
+from sharkadm import workflow
+
 from sharkadm_zip_creator.flet_app import constants
-from sharkadm_zip_creator.flet_app import operators
-import yaml
+from sharkadm_zip_creator.flet_app.components import operators
 
 
-class FramePostWorkflowExportOptions(ft.Row):
+@ft.control
+class PostWorkflowExportOptionsComponent(ft.Container):
+    label: str = "Exportalternativ efter körning"
+    color: str = constants.COLOR_EXPORT_OPTIONS_SECONDARY
+    expand: bool = True
 
-    def __init__(self, parent):
-        super().__init__()
-        self.parent_control = parent
-        self.expand = True
+    def init(self):
+        self._lv_color = ft.Colors.GREY_500
+
+        self.lv = ft.ListView(
+            spacing=10,
+            padding=20,
+            # width=150,
+            auto_scroll=False,
+            expand=True,
+        )
+
+        self.content = ft.Container(
+            bgcolor=self._lv_color,
+            content=self.lv,
+            height=500,
+            expand=True,
+            border_radius=30,
+        )
+
         self._workflow_export_widgets = []
         self._saved_options = []
 
     def reset(self) -> None:
-        self.controls = []
+        self.lv.controls.clear()
         self._workflow_export_widgets = []
 
     def _get_exporters(self, incoming_exporters) -> list[dict]:
         exporters = []
         for exp in incoming_exporters:
             for i, saved_exp in enumerate(self._saved_options[:]):
-                if exp['name'] == saved_exp['name']:
+                if exp["name"] == saved_exp["name"]:
                     updated_exp = {}
                     for key, value in exp.items():
                         updated_exp[key] = saved_exp.get(key, value)
@@ -34,30 +52,20 @@ class FramePostWorkflowExportOptions(ft.Row):
                 exporters.append(exp)
         return exporters
 
-    def set_workflow(self, wflow: workflow.SHARKadmWorkflow, color: str = None) -> None:
+    def set_workflow(
+        self, wflow: workflow.SHARKadmWorkflow, color: str | None = None
+    ) -> None:
         self.reset()
-        self.lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=False)
-
-        wid_list = [
-            ft.Text('Exportalternativ efter körning'),
-            ft.Divider(height=9, thickness=3)
-        ]
+        wid_list = [ft.Text(self.label, color="black"), ft.Divider(height=9, thickness=3)]
         # for exp in wflow.exporters:
         for exp in self._get_exporters(wflow.exporters_info):
-            wid = operators.PostOperator(self, exp)
+            wid = operators.PostOperatorCard(operator=exp)
             wid_list.append(wid)
             wid_list.append(ft.Divider(height=9, thickness=3))
             self._workflow_export_widgets.append(wid)
 
-        color = color or constants.COLOR_EXPORT_OPTIONS_SECONDARY
         self.lv.controls = wid_list
-        self.controls.append(ft.Container(
-            content=self.lv,
-            bgcolor=color,
-            border_radius=20,
-            padding=10,
-            expand=True
-        ))
+        self.lv.update()
 
     @property
     def workflow_export_options(self) -> list:
@@ -68,6 +76,3 @@ class FramePostWorkflowExportOptions(ft.Row):
 
     def update_workflow_export_options(self, options):
         self._saved_options = options
-
-    def run_exporter(self, **kwargs) -> None:
-        self.parent_control.run_exporter(**kwargs)
