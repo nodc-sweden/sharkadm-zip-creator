@@ -15,6 +15,7 @@ class SearchComponent(ft.Row):
             multiline=False,
             on_change=self._on_change_search_field,
         )
+
         btn_clear_filter_field = ft.Button("Rensa", on_click=self._on_clear_filter_field)
 
         self._case_sensitive = ft.Switch(
@@ -23,11 +24,6 @@ class SearchComponent(ft.Row):
         self._regex = ft.Switch(
             label="Använd regex", on_change=self._on_change_search_field
         )
-
-        # self._quick_search_title = ft.Text("Snabbsök", visible=False,
-        #                                    weight=ft.FontWeight.BOLD,
-        #                                    text_align=ft.TextAlign.CENTER,
-        #                                    color=ft.Colors.BLACK)
         self._quick_search_row = ft.Row()
 
         self._quick_search_cont = ft.Container(
@@ -42,6 +38,7 @@ class SearchComponent(ft.Row):
             expand=True,
             border_radius=30,
         )
+        self._quick_search_cont.visible = False
 
         self.controls = [
             self._filter_field,
@@ -70,8 +67,10 @@ class SearchComponent(ft.Row):
             self.on_change(self._filter_field.value.strip())
 
     def update_quick_search(self, search_list: list[str]) -> None:
-        # self._quick_search_title.visible = True
         self._quick_search_row.controls.clear()
+        self._quick_search_cont.visible = False
+        if search_list:
+            self._quick_search_cont.visible = True
         n = 2
         for items in [search_list[i : i + n] for i in range(0, len(search_list), n)]:
             col = ft.Column(
@@ -83,15 +82,6 @@ class SearchComponent(ft.Row):
                 ]
             )
             self._quick_search_row.controls.append(col)
-        #     for item in items:
-        #         wid = ft.Button(item,
-        #                         on_click=lambda
-        #                             e, x=item: self._on_quick_search(
-        #                             e, x))
-        #
-        # for item in search_list:
-        #
-        #     self._quick_search_row.controls.append(wid)
 
     def filter_list(self, lst: list[str]) -> list[str]:
         text = self.text
@@ -130,3 +120,4 @@ class SearchComponent(ft.Row):
                 if text.upper() in key.upper():
                     new_data[key] = key
         return new_data
+

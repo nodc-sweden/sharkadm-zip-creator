@@ -65,7 +65,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         )
         sharkadm_event.subscribe(sharkadm_event.Events.LOG_PROGRESS, self._on_progress)
 
-        # event.subscribe(event.Events.SHOW_INFO, self._on_change_state, prio=5) # test
         event.subscribe(event.Events.SHOW_INFO, self._on_show_info)
         event.subscribe(event.Events.SHOW_ON_LOG_FRAME, self._on_show_on_log_frame)
         event.subscribe(event.Events.SHOW_DIALOG, self._on_show_dialog)
@@ -81,25 +80,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         event.subscribe(event.Events.DISABLE, self.disable, prio=5)
         event.subscribe(event.Events.ENABLE, self.enable, prio=5)
 
-        # print("="*100)
-        # print("ZipArchiveCreatorGUI.__init__")
-        # print("-"*100)
-        # for key, value in event._subscribers.items():
-        #     print(f"{key=}")
-        #     for p, items in value.items():
-        #         print(f"  {p=}")
-        #         for item in items:
-        #             print(f"    {item=}")
-        # print("-" * 100)
-        # print("-" * 100)
-        # print(f"{list(event.Events)=}")
-        # print(f"{event._subscribers.keys()=}")
-        # print(f"{event.__file__=}")
-        # print(f"{id(event._subscribers)=}")
-        # print("APP")
-        # print("-" * 100)
-        # print("-" * 100)
-
         self.app = ft.run(self.start)
 
         self._remove_log_file()
@@ -107,10 +87,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
     @property
     def log_file_path(self) -> pathlib.Path:
         return USER_DIR / self.state.log_file_name
-
-    # @property
-    # def zip_directory(self) -> str:
-    #     return self.frame_config.zip_directory
 
     def _remove_log_file(self):
         if self.log_file_path.exists():
@@ -358,7 +334,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             visible=self.source_type.source == SourceType.SINGLE, main_app=self
         )
         self._frame_create_multiple_zip = FrameCreateMultipleZip(
-            visible=self.source_type.source == SourceType.MULTIPLE
+            visible=self.source_type.source == SourceType.MULTIPLE,
         )
         # if hasattr(self, "_frame_create_single_zip"):
         #     # print(f"2: {self._frame_create_single_zip=}")

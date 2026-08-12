@@ -6,6 +6,7 @@ import sharkadm.utils
 from sharkadm.config.config import Config
 
 from sharkadm_zip_creator.flet_app.app_state import States
+from flet_app import constants
 
 
 @ft.control
@@ -21,11 +22,9 @@ class StateComponent(ft.Container):
         self._sync_test_tooltip = ft.Tooltip(message="")
 
         self._config: Config | None = None
-        self._test_color = "GREEN"
-        self._prod_color = "RED"
         self._color_mapper = dict(
-            TEST=self._test_color,
-            PROD=self._prod_color,
+            TEST=constants.COLOR_TEST_PRIMARY,
+            PROD=constants.COLOR_PROD_PRIMARY,
         )
 
         self.bgcolor = self._color_mapper[self.state.upper()]
