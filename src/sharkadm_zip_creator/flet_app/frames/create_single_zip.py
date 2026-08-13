@@ -110,9 +110,11 @@ class FrameCreateSingleZip(ft.Container):
             adm_logger.CRITICAL,
         ]:
             return
+        # level = data.get("level", "").upper()
         msg = data.get("msg", "")
         event.post_event(event.Events.SHOW_ON_LOG_FRAME, msg)
         self._transformation_logs.append(msg)
+        # self._transformation_logs.append(f"{level}: {msg}")
 
     def _on_change_source(self, data: dict):
         path = data["path"]
@@ -166,7 +168,16 @@ class FrameCreateSingleZip(ft.Container):
             finally:
                 self.page.run_task(self._on_workflow_done, result, error)
 
+        print()
+        print("=" * 100)
+        print(f"{self.workflow_options_component.workflow_options=}")
+        print()
         self._workflow.update_operators(self.workflow_options_component.workflow_options)
+        exp = dict(
+            name="PolarsZipArchive",
+            export_directory=str(self.main_app.config_component.zip_target_directory),
+        )
+        self._workflow.update_exporters([exp])
         threading.Thread(target=run, daemon=True).start()
 
     async def _on_workflow_done(self, result, error):
