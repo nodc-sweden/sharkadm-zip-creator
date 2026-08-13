@@ -36,10 +36,15 @@ class FrameCreateSingleZip(ft.Container):
             [ft.Text("Konfigurationsfil:"), self._workflow_config_path], expand=True
         )
         self.data_source = SingleDataSourceComponent()
+        self._show_operators_info_switch = ft.Switch(
+            label="Visa operationer", on_change=self._on_change_show_operators_info_switch
+        )
         self.operators_component = ListOperatorsComponent()
         self.workflow_options_component = WorkflowOptionsComponent()
         self.post_export_options_component = PostWorkflowExportOptionsComponent()
         self.button_create_zip = ft.Button("Skapa zip-paket", on_click=self.on_create_zip)
+
+        self.operators_component.visible = False
 
         event.subscribe(
             event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source, prio=75
@@ -84,6 +89,7 @@ class FrameCreateSingleZip(ft.Container):
             [
                 self.data_source,
                 config_path_row,
+                self._show_operators_info_switch,
                 ft.Row(
                     [
                         self.operators_component,
@@ -97,29 +103,6 @@ class FrameCreateSingleZip(ft.Container):
             expand=True,
         )
 
-        # self.controls = [
-        #     config_path_row,
-        #     self.data_source,
-        #     ft.Container(
-        #         expand=True,
-        #         bgcolor=ft.Colors.RED,
-        #         content=ft.Column([
-        #             ft.Row([
-        #                 self.operators_component,
-        #                 # self.operators_component,
-        #                 self._option_tabs,
-        #             ],
-        #                 expand=True,
-        #                 # vertical_alignment=ft.CrossAxisAlignment.STRETCH,
-        #                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-        #             ),
-        #             self.button_create_zip
-        #         ])
-        #
-        #     )
-        #
-        # ]
-
     def _on_log_transformation(self, data: dict[str, Any]) -> None:
         if data.get("level") not in [
             adm_logger.WARNING,
@@ -127,30 +110,22 @@ class FrameCreateSingleZip(ft.Container):
             adm_logger.CRITICAL,
         ]:
             return
+        # level = data.get("level", "").upper()
         msg = data.get("msg", "")
         event.post_event(event.Events.SHOW_ON_LOG_FRAME, msg)
         self._transformation_logs.append(msg)
+        # self._transformation_logs.append(f"{level}: {msg}")
 
     def _on_change_source(self, data: dict):
-        # Disable stuff
-        # print()
-        # print(f"{self.page.controls=}")
-        # for cont in self.page.controls:
-        #     print(f"{cont=}")
-        # self._reset_workflow()
-        # print(f"{sharkadm_config.state=}")
-        # print(f"{id(sharkadm_config)=}")
-        # print(f"{sharkadm_config.root_dir=}")
         path = data["path"]
         data_holder = get_polars_data_holder(path)
         wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
         wflow.set_data_sources(path)
         self._set_workflow(wflow)
 
-    # def _reset_workflow(self) -> None:
-    #     self.operators_component.reset()
-    #     self.workflow_options_component.reset()
-    #     self.post_export_options_component.reset()
+    def _on_change_show_operators_info_switch(self, e: ft.Event[ft.Switch]):
+        self.operators_component.visible = self._show_operators_info_switch.value
+        self.operators_component.update()
 
     def _set_workflow(self, wflow: workflow.SHARKadmWorkflow) -> None:
         self._workflow = wflow
@@ -159,7 +134,6 @@ class FrameCreateSingleZip(ft.Container):
         self._workflow_config_path.value = str(self._workflow.path)
         self._workflow_config_path.update()
 
-        # wflow.save_config(utils.USER_DIR / 'test_create_workflow.yaml')
         self._load_export_options()
 
         self.operators_component.set_workflow(wflow)
@@ -194,7 +168,16 @@ class FrameCreateSingleZip(ft.Container):
             finally:
                 self.page.run_task(self._on_workflow_done, result, error)
 
+        print()
+        print("=" * 100)
+        print(f"{self.workflow_options_component.workflow_options=}")
+        print()
         self._workflow.update_operators(self.workflow_options_component.workflow_options)
+        exp = dict(
+            name="PolarsZipArchive",
+            export_directory=str(self.main_app.config_component.zip_target_directory),
+        )
+        self._workflow.update_exporters([exp])
         threading.Thread(target=run, daemon=True).start()
 
     async def _on_workflow_done(self, result, error):
@@ -270,3 +253,8 @@ class FrameCreateSingleZip(ft.Container):
             )
         finally:
             self.save_export_options()
+
+    def update_layout(self):
+        self.operators_component.set_height()
+        self.workflow_options_component.set_height()
+        self.post_export_options_component.set_height()
