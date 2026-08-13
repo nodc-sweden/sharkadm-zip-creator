@@ -1,5 +1,7 @@
 import pathlib
 
+import flet as ft
+from screeninfo import get_monitors
 from sharkadm import utils
 
 USER_DIR = utils.get_root_directory() / "zip_archive_creator"
@@ -18,29 +20,30 @@ def fix_url_str(url: str) -> str:
     return url
 
 
-# class CustomSaves:
-#
-#     def __init__(self):
-#         self._file_path = USER_DIR
-#         self._data = {}
-#         self._load_file()
-#
-#     def _load_file(self):
-#         if not CUSTOM_SAVES_PATH.exists():
-#             return
-#         with open(CUSTOM_SAVES_PATH) as fid:
-#             self._data = yaml.safe_load(fid)
-#
-#     def _save_file(self):
-#         with open(CUSTOM_SAVES_PATH, 'w') as fid:
-#             yaml.safe_dump(self._data, fid)
-#
-#     def add(self, key, value):
-#         self._data[key] = value
-#         self._save_file()
-#
-#     def get(self, key):
-#         return self._data.get(key)
-#
-#
-# custom_save = CustomSaves()
+def get_current_monitor(page: ft.Page) -> dict:
+    # Fönstrets position
+    x = page.window.left
+    y = page.window.top
+    w = page.window.width
+    h = page.window.height
+
+    # Använd fönstrets mittpunkt
+    cx = x + w / 2
+    cy = y + h / 2
+
+    info = dict()
+    info["x"] = x
+    info["y"] = y
+    info["width"] = w
+
+    for i, m in enumerate(get_monitors()):
+        if m.x <= cx < m.x + m.width and m.y <= cy < m.y + m.height:
+            print(f"Fönstret är på skärm {i}: {m.width}x{m.height}")
+            info["monitor_width"] = m.width
+            info["monitor_height"] = m.height
+            info["monitor_index"] = i
+            info["monitor_name"] = m.name
+            info["monitor_is_primary"] = m.is_primary
+            return info
+
+    return info

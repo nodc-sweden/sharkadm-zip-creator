@@ -1,6 +1,8 @@
 import flet as ft
 from sharkadm import workflow
 
+from sharkadm_zip_creator.flet_app import constants
+
 FONT_WEIGHT = ft.FontWeight.W_400
 TEXT_SIZE_LABEL_1 = 20
 TEXT_SIZE_LABEL_2 = 16
@@ -9,40 +11,6 @@ TEXT_SIZE_LABEL_2 = 16
 @ft.control
 class ListOperatorsComponent(ft.Container):
     expand: bool = True
-
-    # def init(self):
-    #     self._lv_color = ft.Colors.GREY_500
-    #
-    #     self.lv = ft.ListView(
-    #         spacing=10,
-    #         padding=20,
-    #         expand=True,   # keep this
-    #     )
-    #
-    #     self.content = ft.Container(
-    #         expand=True,
-    #         bgcolor=self._lv_color,
-    #         content=self.lv,
-    #     )
-    #
-    #     for i in range(100):
-    #         self.lv.controls.append(ft.Text(f"Line {i}"))
-
-    # @ft.control
-    # class ListOperatorsComponent(ft.Container):
-    #     expand: bool = True
-    #
-    #     def init(self):
-    #         self.lv = ft.ListView()
-    #
-    #         for i in range(200):
-    #             self.lv.controls.append(ft.Text(f"Row {i}"))
-    #
-    #         self.content = ft.Container(
-    #             bgcolor=ft.Colors.GREY_500,
-    #             expand=True,
-    #             content=self.lv,
-    #         )
 
     def init(self):
         self._lv_color = ft.Colors.GREY_500
@@ -57,7 +25,7 @@ class ListOperatorsComponent(ft.Container):
         self.content = ft.Container(
             bgcolor=self._lv_color,
             content=self.lv,
-            height=500,
+            height=400,
             expand=True,
             border_radius=30,
         )
@@ -134,3 +102,9 @@ class ListOperatorsComponent(ft.Container):
                     )
                 )
         self.lv.update()
+
+    def set_height(self):
+        self.content.height = int(
+            self.page.window.height * constants.LIST_VIEW_HEIGHT_PERCENTAGE / 100
+        )
+        self.content.update()

@@ -120,4 +120,3 @@ class SearchComponent(ft.Row):
                 if text.upper() in key.upper():
                     new_data[key] = key
         return new_data
-

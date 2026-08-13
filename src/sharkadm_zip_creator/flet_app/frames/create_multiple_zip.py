@@ -6,7 +6,7 @@ import flet as ft
 from sharkadm import workflow
 from sharkadm.data import get_polars_data_holder
 
-from sharkadm_zip_creator.flet_app import event, widgets
+from sharkadm_zip_creator.flet_app import constants, event, widgets
 from sharkadm_zip_creator.flet_app.components import SearchComponent
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
@@ -58,6 +58,13 @@ class FrameCreateMultipleZip(ft.Column):
             "Skapa zip-paket för valda", on_click=self._on_create_zips
         )
 
+        self._container = ft.Container(
+            bgcolor="green",
+            content=self.lv,
+            height=400,
+            expand=True,
+            border_radius=30,
+        )
         self.controls = [
             ft.Row(
                 [
@@ -72,16 +79,14 @@ class FrameCreateMultipleZip(ft.Column):
             # filter_row,
             nr_row,
             ft.Divider(height=2, thickness=1),
-            ft.Container(
-                # bgcolor=self._lv_color,
-                content=self.lv,
-                height=400,
-                expand=True,
-                border_radius=30,
-            ),
+            self._container,
             ft.Divider(height=5, thickness=2),
-            self._select_all,
-            self._button_create_zips,
+            ft.Row(
+                [
+                    self._select_all,
+                    self._button_create_zips,
+                ]
+            ),
         ]
 
     def _on_pick_new_root(self, path: Path):
@@ -272,3 +277,9 @@ class FrameCreateMultipleZip(ft.Column):
         except Exception as e:
             failed_msg = str(e)
             print(f"{failed_msg=}")
+
+    def update_layout(self):
+        self._container.height = int(
+            self.page.window.height * constants.LIST_VIEW_HEIGHT_PERCENTAGE / 100
+        )
+        self._container.update()

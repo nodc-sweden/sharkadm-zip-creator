@@ -5,8 +5,8 @@ import flet as ft
 import sharkadm.utils
 from sharkadm.config.config import Config
 
+from sharkadm_zip_creator.flet_app import constants
 from sharkadm_zip_creator.flet_app.app_state import States
-from flet_app import constants
 
 
 @ft.control

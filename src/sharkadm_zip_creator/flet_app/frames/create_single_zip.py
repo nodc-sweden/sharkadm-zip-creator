@@ -36,8 +36,9 @@ class FrameCreateSingleZip(ft.Container):
             [ft.Text("Konfigurationsfil:"), self._workflow_config_path], expand=True
         )
         self.data_source = SingleDataSourceComponent()
-        self._show_operators_info_switch = ft.Switch(label="Visa operationer",
-            on_change=self._on_change_show_operators_info_switch)
+        self._show_operators_info_switch = ft.Switch(
+            label="Visa operationer", on_change=self._on_change_show_operators_info_switch
+        )
         self.operators_component = ListOperatorsComponent()
         self.workflow_options_component = WorkflowOptionsComponent()
         self.post_export_options_component = PostWorkflowExportOptionsComponent()
@@ -241,3 +242,8 @@ class FrameCreateSingleZip(ft.Container):
             )
         finally:
             self.save_export_options()
+
+    def update_layout(self):
+        self.operators_component.set_height()
+        self.workflow_options_component.set_height()
+        self.post_export_options_component.set_height()

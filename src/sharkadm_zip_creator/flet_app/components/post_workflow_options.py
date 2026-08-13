@@ -25,7 +25,7 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         self.content = ft.Container(
             bgcolor=self._lv_color,
             content=self.lv,
-            height=500,
+            height=400,
             expand=True,
             border_radius=30,
         )
@@ -76,3 +76,9 @@ class PostWorkflowExportOptionsComponent(ft.Container):
 
     def update_workflow_export_options(self, options):
         self._saved_options = options
+
+    def set_height(self):
+        self.content.height = int(
+            self.page.window.height * constants.LIST_VIEW_HEIGHT_PERCENTAGE / 100
+        )
+        self.content.update()

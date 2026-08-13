@@ -482,3 +482,8 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             page_window_width=self.page.window.width,
             page_window_height=self.page.window.height,
         )
+        # print("_save_layout")
+        # info = utils.get_current_monitor(self.page)
+        # print(info)
+        self._frame_create_single_zip.update_layout()
+        self._frame_create_multiple_zip.update_layout()
