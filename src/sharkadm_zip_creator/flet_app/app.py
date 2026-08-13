@@ -5,6 +5,7 @@ import threading
 from queue import Queue
 
 import flet as ft
+from flet_app.language import get_text
 from sharkadm import event as sharkadm_event
 from sharkadm.sharkadm_logger import adm_logger, create_xlsx_report
 from sharkadm.workflow import SHARKadmWorkflow
@@ -311,10 +312,10 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         )
 
         self._info_text = ft.Text(
-            "Det här är infotext....som kommer att ändras när det händer något...",
+            get_text("default_info_text"),
+            # "Det här är infotext....som kommer att ändras när det händer något...",
             bgcolor="gray",
         )
-        print(f"_build_components: {id(self._info_text)=}")
 
         self._progress_text = ft.Text()
         self._progress_bar = ft.ProgressBar(width=400, value=0)
@@ -327,9 +328,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         )
 
         self.frame_log = FrameLog()
-        if hasattr(self, "_frame_create_single_zip"):
-            # print(f"1: {self._frame_create_single_zip=}")
-            print(f"1: {id(self._frame_create_single_zip)=}")
         self._frame_create_single_zip = FrameCreateSingleZip(
             visible=self.source_type.source == SourceType.SINGLE, main_app=self
         )
@@ -351,8 +349,8 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                 controls=[
                     ft.TabBar(
                         tabs=[
-                            ft.Tab(label="Skapa ZIP-paket"),
-                            ft.Tab(label="Log", icon=ft.Icons.EDIT_DOCUMENT),
+                            ft.Tab(label=get_text("create_zip_package")),
+                            ft.Tab(label=get_text("log"), icon=ft.Icons.EDIT_DOCUMENT),
                         ]
                     ),
                     ft.TabBarView(
@@ -386,7 +384,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         )
 
     def _build_layout(self):
-        print("BUILDING LAYOUT")
         self._main_column = ft.Column(
             [
                 self.config_component,
@@ -428,7 +425,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._progress_bar.update()
 
     def _on_show_dialog(self, data: dict) -> None:
-        title = data.get("title", "Det här är något som kan vara bra att veta")
+        title = data.get("title", get_text("important_info"))
         msg = data.get("msg", "Här borde det stå något annat förmodligen...")
         self._on_show_info(msg)
         self._dialog_title.value = title
@@ -436,7 +433,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._open_dlg(self._dlg)
 
     def _on_show_transform_dialog(self, data: dict) -> None:
-        title = data.get("title", "Det här är något som kan vara bra att veta")
+        title = data.get("title", get_text("important_info"))
         # msg = data.get("msg", "Här borde det stå något annat förmodligen...")
         self._current_transformer_dialog_logs = data.get("logs", [])
         self._current_transformer_dialog_quick_search = dict()

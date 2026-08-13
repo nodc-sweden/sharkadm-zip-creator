@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import flet as ft
+from flet_app.language import get_text
 from sharkadm.config import sharkadm_config
 
 from sharkadm_zip_creator.flet_app import event, widgets
@@ -29,8 +30,8 @@ class ConfigComponent(ft.Column):
         self._config_root_path = ft.Text(str(self._config.root_dir))
 
         self._select_zip_directory_button = widgets.DirectoryPickerButton(
-            title="Byt destination",
-            dialog_title="Väl destinationskatalog för zip-filer",
+            title=get_text("change_destination"),
+            dialog_title=get_text("select_destination_folder"),
             on_pick=self._on_pick_zip_directory,
         )
         self._zip_target_directory = ft.Text()
@@ -47,13 +48,13 @@ class ConfigComponent(ft.Column):
             ),
             ft.Row(
                 [
-                    ft.Text("Konfigurationmapp:"),
+                    ft.Text(get_text("configuration_folder:")),
                     self._config_root_path,
                 ]
             ),
             ft.Row(
                 [
-                    ft.Text("Zip-paketen hamnar här:"),
+                    ft.Text(get_text("zip_package_destination")),
                     self._zip_target_directory,
                     self._select_zip_directory_button,
                 ]

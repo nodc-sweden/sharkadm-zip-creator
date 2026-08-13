@@ -2,6 +2,7 @@ import re
 from typing import Any, Callable
 
 import flet as ft
+from flet_app.language import get_text
 
 
 @ft.control
@@ -10,19 +11,21 @@ class SearchComponent(ft.Row):
 
     def init(self):
         self._filter_field = ft.TextField(
-            label="Filtrera",
+            label=get_text("filter"),
             icon=ft.Icons.SEARCH,
             multiline=False,
             on_change=self._on_change_search_field,
         )
 
-        btn_clear_filter_field = ft.Button("Rensa", on_click=self._on_clear_filter_field)
+        btn_clear_filter_field = ft.Button(
+            get_text("clear"), on_click=self._on_clear_filter_field
+        )
 
         self._case_sensitive = ft.Switch(
-            label="Case sensitive", on_change=self._on_change_search_field
+            label=get_text("case_sensitive"), on_change=self._on_change_search_field
         )
         self._regex = ft.Switch(
-            label="Använd regex", on_change=self._on_change_search_field
+            label=get_text("use_regex"), on_change=self._on_change_search_field
         )
         self._quick_search_row = ft.Row()
 
