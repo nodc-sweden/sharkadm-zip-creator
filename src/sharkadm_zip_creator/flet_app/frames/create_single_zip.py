@@ -148,6 +148,7 @@ class FrameCreateSingleZip(ft.Container):
         print(f"{self.workflow_options_component.workflow_options=}")
         print()
         self._workflow.update_operators(self.workflow_options_component.workflow_options)
+        self._workflow.update_exporters(self.workflow_options_component.workflow_options)
         exp = dict(
             name="PolarsZipArchive",
             export_directory=str(self.main_app.config_component.zip_target_directory),

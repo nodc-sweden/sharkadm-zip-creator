@@ -79,7 +79,7 @@ class WorkflowOptionsComponent(ft.Container):
     def _get_show_options_for_operators(wflow: workflow.SHARKadmWorkflow) -> list:
         infos = []
         show_opers = wflow.get("gui", {}).get("show_options_for_operators", [])
-        for oper in wflow.operators_info:
+        for oper in wflow.operators_info + wflow.exporters_info:
             if oper["name"] not in show_opers:
                 continue
             infos.append(oper)
