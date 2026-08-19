@@ -5,6 +5,7 @@ import flet as ft
 from sharkadm import utils as sharkadm_utils
 
 from sharkadm_zip_creator.flet_app import utils
+from sharkadm_zip_creator.flet_app.language import get_text
 
 
 @dataclass
@@ -17,7 +18,7 @@ class FrameLog(ft.Row):
         col = ft.Column(
             [
                 ft.ElevatedButton(
-                    "Öppna mappen med loggar", on_click=self._open_log_directory
+                    get_text("open_log_directory"), on_click=self._open_log_directory
                 ),
                 self.lv,
             ],

@@ -99,7 +99,9 @@ class UserSaves:
             event.Events.CHANGE_STATE, self._on_change_state_or_source_type, prio=10
         )
         event.subscribe(
-            event.Events.CHANGE_SOURCE_TYPE, self._on_change_state_or_source_type, prio=10
+            event.Events.CHANGE_SOURCE_TYPE,
+            self._on_change_state_or_source_type,
+            prio=10,
         )
 
         print("-" * 100)

@@ -1,7 +1,8 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import flet as ft
+from flet_app.language import get_text
 
 from sharkadm_zip_creator.flet_app import event, widgets
 from sharkadm_zip_creator.flet_app.app_source import SourceType
@@ -45,27 +46,30 @@ class SingleDataSourceComponent(ft.Row):
         )
 
         self._pick_file_button = widgets.SingleFilePickerButton(
-            title="Välj en datakälla från FIL",
+            title=get_text("select_a_data_source_from_file"),
+            # title="Välj en datakälla från FIL",
             on_pick=self._on_pick_new_source,
             initial_directory=self._latest_source_path.value,
-            dialog_title="Välj en fil",
+            dialog_title=get_text("select_a_file"),
             allowed_extensions=["xlsx", "txt"],
         )
         self._pick_directory_button = widgets.DirectoryPickerButton(
-            title="Välj en datakälla från MAPP",
+            title=get_text("select_a_data_source_from_folder"),
             on_pick=self._on_pick_new_source,
-            dialog_title="Välj en mapp",
+            initial_directory=self._latest_source_path.value,
+            dialog_title=get_text("select_a_folder"),
         )
 
         self.controls = [
             self._pick_file_button,
-            ft.Text("eller"),
+            ft.Text(get_text("or")),
             self._pick_directory_button,
-            ft.Text("eller"),
+            ft.Text(get_text("or")),
             ft.Row(
                 [
                     ft.Button(
-                        "Ladda senaste ->", on_click=self._on_load_latest_data_source
+                        f"{get_text('load_latest')} ->",
+                        on_click=self._on_load_latest_data_source,
                     ),
                     self._latest_source_path,
                 ]

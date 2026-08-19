@@ -1,4 +1,5 @@
 import flet as ft
+from flet_app.language import get_text
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants
@@ -7,7 +8,7 @@ from sharkadm_zip_creator.flet_app.components import operators
 
 @ft.control
 class WorkflowOptionsComponent(ft.Container):
-    label: str = "Alternativ vid körning"
+    label: str = get_text("options_during_zip_creation")
     color: str = constants.COLOR_EXPORT_OPTIONS_SECONDARY
     expand: bool = True
 
@@ -58,7 +59,10 @@ class WorkflowOptionsComponent(ft.Container):
 
         operators_info = self._get_show_options_for_operators(wflow)
 
-        wid_list = [ft.Text(self.label, color="black"), ft.Divider(height=9, thickness=3)]
+        wid_list = [
+            ft.Text(self.label, color="black"),
+            ft.Divider(height=9, thickness=3),
+        ]
         # for exp in wflow.exporters:
         for oper in self._get_operators(operators_info):
             print(f"{oper=}")
@@ -79,7 +83,6 @@ class WorkflowOptionsComponent(ft.Container):
             if oper["name"] not in show_opers:
                 continue
             infos.append(oper)
-            print(f"jaha: {oper=}")
         return infos
 
     @property

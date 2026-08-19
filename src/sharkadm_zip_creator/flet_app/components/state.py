@@ -1,8 +1,10 @@
 import asyncio
-from typing import Callable, Self
+from collections.abc import Callable
+from typing import Self
 
 import flet as ft
 import sharkadm.utils
+from flet_app.language import get_text
 from sharkadm.config.config import Config
 
 from sharkadm_zip_creator.flet_app import constants
@@ -41,10 +43,12 @@ class StateComponent(ft.Container):
             value=str(self.state).upper(),
         )
         self._sync_test_button = ft.Button(
-            "Synka test", on_click=self._on_sync_test, tooltip=self._sync_test_tooltip
+            get_text("sync_test"),
+            on_click=self._on_sync_test,
+            tooltip=self._sync_test_tooltip,
         )
         self._auto_sync_test_switch = ft.Switch(
-            label="Synka test automatiskt", on_change=self._on_auto_sync_test
+            label=get_text("sync_test_automatic"), on_change=self._on_auto_sync_test
         )
         self.content = ft.Row(
             [
@@ -67,9 +71,9 @@ class StateComponent(ft.Container):
             # old_title = self.
             if not self._config.test_is_synced_with_prod:
                 sharkadm.utils.clear_cache()
-                lines = ["Osynkade filer:", *self._config.unsynced_files]
+                lines = [f"{get_text('unsynced_files')}:", *self._config.unsynced_files]
                 self._sync_test_tooltip.message = "\n".join(lines)
-                self._sync_test_button.content = "Synka test (test är inte uppdaterad)"
+                self._sync_test_button.content = get_text("sync_test_is_not_updated")
                 try:
                     self._sync_test_button.update()
                 except RuntimeError:
@@ -91,7 +95,7 @@ class StateComponent(ft.Container):
         self._config.sync_test_with_prod()
         sharkadm.utils.clear_cache()
         self._sync_test_tooltip.message = ""
-        self._sync_test_button.content = "Synka test"
+        self._sync_test_button.content = get_text("sync_test")
         self._sync_test_button.update()
 
     def _on_auto_sync_test(self, e: ft.Event[ft.Switch]) -> None:
@@ -132,7 +136,7 @@ class Countdown(ft.Text):
     async def update_timer(self):
         while self.seconds and self.running:
             mins, secs = divmod(self.seconds, 60)
-            self.value = "{:02d}:{:02d}".format(mins, secs)
+            self.value = f"{mins:02d}:{secs:02d}"
             self.update()
             await asyncio.sleep(1)
             self.seconds -= 1

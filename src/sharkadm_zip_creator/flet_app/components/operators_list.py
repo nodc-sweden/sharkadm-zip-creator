@@ -1,4 +1,5 @@
 import flet as ft
+from flet_app.language import get_text
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants
@@ -39,7 +40,7 @@ class ListOperatorsComponent(ft.Container):
         text_color = "black"
         self.lv.controls.append(
             ft.Text(
-                f"Operationer som kommer att utföras är kopplade till datatypen "
+                f"{get_text('operations_for_data_type')} "
                 f"{wflow.data_type.data_type_in_data}",
                 size=TEXT_SIZE_LABEL_1,
                 weight=FONT_WEIGHT,
@@ -52,7 +53,7 @@ class ListOperatorsComponent(ft.Container):
             self.lv.controls.append(ft.Divider())
             self.lv.controls.append(
                 ft.Text(
-                    "OPERATIONER",
+                    get_text("operations"),
                     size=TEXT_SIZE_LABEL_2,
                     weight=FONT_WEIGHT,
                     color=text_color,
@@ -80,7 +81,7 @@ class ListOperatorsComponent(ft.Container):
             self.lv.controls.append(ft.Divider())
             self.lv.controls.append(
                 ft.Text(
-                    "EXPORTER",
+                    get_text("exports"),
                     size=TEXT_SIZE_LABEL_2,
                     weight=FONT_WEIGHT,
                     color=text_color,

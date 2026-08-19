@@ -1,6 +1,7 @@
 import flet as ft
 
 from sharkadm_zip_creator.flet_app import event
+from sharkadm_zip_creator.flet_app.language import get_text
 
 
 @ft.control
@@ -14,7 +15,8 @@ class OperatorCard(ft.Card):
 
         self.operator_widgets = {}
 
-        name = self.operator["name"]
+        name = get_text(self.operator["name"])
+        print(f"{name=}")
         self._main_cb = ft.Checkbox(name, on_change=self._on_change_main)
         if not self.allow_turn_off:
             self._main_cb.disabled = True
@@ -27,14 +29,16 @@ class OperatorCard(ft.Card):
             if key in ["name", "active"]:
                 continue
             if type(value) is bool:
-                wid = ft.Checkbox(key)
+                wid = ft.Checkbox(get_text(key))
                 wid.value = value
             elif type(value) is int:
                 wid = ft.TextField(
-                    label=key, value=value, input_filter=ft.NumbersOnlyInputFilter()
+                    label=get_text(key),
+                    value=value,
+                    input_filter=ft.NumbersOnlyInputFilter(),
                 )
             else:
-                wid = ft.Text(key)
+                wid = ft.Text(get_text(key))
             self.operator_widgets[key] = wid
             self._children_col.controls.append(wid)
 
@@ -81,7 +85,7 @@ class PostOperatorCard(ft.Card):
 
         self.operator_widgets = {}
 
-        name = self.operator["name"]
+        name = get_text(self.operator["name"])
         self._main_cb = ft.Button(name, on_click=self._on_click_main)
 
         self._children_col = ft.Column()
@@ -89,10 +93,10 @@ class PostOperatorCard(ft.Card):
             if key in ["name", "active"]:
                 continue
             if type(value) is bool:
-                wid = ft.Checkbox(key)
+                wid = ft.Checkbox(get_text(key))
                 wid.value = value
             else:
-                wid = ft.Text(key)
+                wid = ft.Text(get_text(key))
             self.operator_widgets[key] = wid
             self._children_col.controls.append(wid)
 

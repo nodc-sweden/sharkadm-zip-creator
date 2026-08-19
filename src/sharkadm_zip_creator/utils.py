@@ -6,7 +6,7 @@ def get_zip_name_without_date(zip_name: str) -> str:
 
 
 def get_zip_name_path_mapping(directory: str | pathlib.Path) -> dict[str, pathlib.Path]:
-    mapped = dict()
+    mapped = {}
     for path in pathlib.Path(directory).iterdir():
         if path.suffix != ".zip":
             continue

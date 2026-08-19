@@ -14,7 +14,10 @@ from sharkadm_zip_creator.flet_app.components import (
     SingleDataSourceComponent,
     WorkflowOptionsComponent,
 )
-from sharkadm_zip_creator.flet_app.components.operators_list import ListOperatorsComponent
+from sharkadm_zip_creator.flet_app.components.operators_list import (
+    ListOperatorsComponent,
+)
+from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import user_saves
 
 
@@ -33,16 +36,21 @@ class FrameCreateSingleZip(ft.Container):
         self._workflow: workflow.SHARKadmWorkflow | None = None
         self._workflow_config_path = ft.Text()
         config_path_row = ft.Row(
-            [ft.Text("Konfigurationsfil:"), self._workflow_config_path], expand=True
+            [ft.Text(get_text("configuration_file")), self._workflow_config_path],
+            expand=True,
+            # [ft.Text("Konfigurationsfil:"), self._workflow_config_path], expand=True
         )
         self.data_source = SingleDataSourceComponent()
         self._show_operators_info_switch = ft.Switch(
-            label="Visa operationer", on_change=self._on_change_show_operators_info_switch
+            label=get_text("show_operations"),
+            on_change=self._on_change_show_operators_info_switch,
         )
         self.operators_component = ListOperatorsComponent()
         self.workflow_options_component = WorkflowOptionsComponent()
         self.post_export_options_component = PostWorkflowExportOptionsComponent()
-        self.button_create_zip = ft.Button("Skapa zip-paket", on_click=self.on_create_zip)
+        self.button_create_zip = ft.Button(
+            get_text("create_zip_package"), on_click=self.on_create_zip
+        )
 
         self.operators_component.visible = False
 
@@ -50,40 +58,7 @@ class FrameCreateSingleZip(ft.Container):
             event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source, prio=75
         )
 
-        self._option_tabs = ft.Tabs(
-            length=2,
-            expand=True,
-            content=ft.Column(
-                expand=True,
-                controls=[
-                    ft.TabBar(
-                        tabs=[
-                            ft.Tab(label="Under körning"),
-                            ft.Tab(label="Efter körning"),
-                        ]
-                    ),
-                    ft.TabBarView(
-                        expand=True,
-                        controls=[
-                            ft.Container(
-                                content=ft.Column(
-                                    [
-                                        self.workflow_options_component,
-                                    ],
-                                    expand=True,
-                                ),
-                                expand=True,
-                            ),
-                            ft.Container(
-                                alignment=ft.Alignment.CENTER,
-                                content=self.post_export_options_component,
-                                expand=True,
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-        )
+        event.subscribe(event.Events.RUN_EXPORTER, self._run_exporter)
 
         self.content = ft.Column(
             [
@@ -129,8 +104,6 @@ class FrameCreateSingleZip(ft.Container):
 
     def _set_workflow(self, wflow: workflow.SHARKadmWorkflow) -> None:
         self._workflow = wflow
-        print("-" * 50)
-        print(f"{self._workflow.path=}")
         self._workflow_config_path.value = str(self._workflow.path)
         self._workflow_config_path.update()
 
@@ -155,6 +128,8 @@ class FrameCreateSingleZip(ft.Container):
         def run():
             result = None
             error = None
+
+            self.main_app._current_workflow = self._workflow
 
             try:
                 import time
@@ -191,19 +166,20 @@ class FrameCreateSingleZip(ft.Container):
 
         data = dict()
         if error:
-            data["title"] = "Något gick fel..."
+            data["title"] = get_text("something_went_wrong")
+
             data["msg"] = str(error)
         elif result:
-            data["title"] = "Något kanske gick fel..."
+            data["title"] = get_text("something_maybe_went_wrong")
             data["msg"] = str(result)
         else:
             if self._transformation_logs:
-                data["title"] = "Allt klart! Men, ta en titt på det här!"
+                data["title"] = get_text("all_done_but")
                 data["msg"] = "\n".join(self._transformation_logs)
                 data["logs"] = self._transformation_logs
                 data["workflow"] = self._workflow
             else:
-                data["title"] = "Allt klart!"
+                data["title"] = get_text("all_done")
                 data["msg"] = data["title"]
         event.post_event(event.Events.SHOW_TRANSFORM_DIALOG, data)
         self.main_app.reset_progress()
@@ -228,11 +204,14 @@ class FrameCreateSingleZip(ft.Container):
         self._transformation_logs = []
         print("on_create_zip!")
         if not self._workflow:
-            event.post_event(event.Events.SHOW_INFO, dict(title="Ingen fil vald!"))
+            event.post_event(
+                event.Events.SHOW_INFO, dict(title=get_text("no_file_selected"))
+            )
             return
         if not self.data_source.source_path:
             event.post_event(
-                event.Events.SHOW_INFO, dict(title="Sökväg till zip-paketen saknas!")
+                event.Events.SHOW_INFO,
+                dict(title=get_text("missing_path_to_zip_packages")),
             )
             return
         try:
@@ -242,15 +221,13 @@ class FrameCreateSingleZip(ft.Container):
             failed_msg = str(e)
             print(f"{failed_msg=}")
 
-    def run_exporter(self, **kwargs) -> None:
+    def _run_exporter(self, kwargs) -> None:
         if not self._workflow:
             return
         try:
             self._workflow.export(**kwargs)
         except sharkadm_exceptions.DataHolderError:
-            self.main_app.show_info(
-                dict(title="Detta kan endast göras efter du skapat zip-paket")
-            )
+            self.main_app.show_info(dict(title=get_text("only_after_zip_creation")))
         finally:
             self.save_export_options()
 

@@ -1,8 +1,10 @@
 import threading
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import flet as ft
+from flet_app.language import get_text
 from sharkadm import workflow
 from sharkadm.data import get_polars_data_holder
 
@@ -11,9 +13,10 @@ from sharkadm_zip_creator.flet_app.components import SearchComponent
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 
-@ft.control
+@dataclass
 class FrameCreateMultipleZip(ft.Column):
     expand: bool = True
+    main_app: Any = None
 
     def init(self):
         self._all_sources: dict[str, Path] = dict()
@@ -29,17 +32,23 @@ class FrameCreateMultipleZip(ft.Column):
         self._nr_filtered = ft.Text()
         self._nr_selected = ft.Text()
 
-        row_nr_loaded = ft.Row([ft.Text("Antal i mapp:"), self._nr_loaded])
-        row_nr_filtered = ft.Row([ft.Text("Antal filtrerade:"), self._nr_filtered])
-        row_nr_selected = ft.Row([ft.Text("Antal valda:"), self._nr_selected])
+        row_nr_loaded = ft.Row(
+            [ft.Text(f"{get_text('select_a_folder')}:"), self._nr_loaded]
+        )
+        row_nr_filtered = ft.Row(
+            [ft.Text(f"{get_text('number_filtered')}:"), self._nr_filtered]
+        )
+        row_nr_selected = ft.Row(
+            [ft.Text(f"{get_text('number_selected')}:"), self._nr_selected]
+        )
 
         nr_row = ft.Row([row_nr_loaded, row_nr_filtered, row_nr_selected])
 
         self._pick_directory_button = widgets.DirectoryPickerButton(
-            title="Välj en rotmapp för data",
+            title=get_text("select_a_root_folder_for_data"),
             on_pick=self._on_pick_new_root,
             initial_directory=self._latest_root_directory.value,
-            dialog_title="Välj en rotmapp för data",
+            dialog_title=get_text("select_a_root_folder_for_data"),
         )
 
         self._lv_color = ft.Colors.GREY_500
@@ -52,10 +61,12 @@ class FrameCreateMultipleZip(ft.Column):
             expand=True,
         )
 
-        self._select_all = ft.Checkbox("Välj alla", on_change=self._on_select_all)
+        self._select_all = ft.Checkbox(
+            get_text("select_all"), on_change=self._on_select_all
+        )
 
         self._button_create_zips = ft.Button(
-            "Skapa zip-paket för valda", on_click=self._on_create_zips
+            get_text("create_zip_packages_for_selected"), on_click=self._on_create_zips
         )
 
         self._container = ft.Container(
@@ -70,7 +81,8 @@ class FrameCreateMultipleZip(ft.Column):
                 [
                     self._pick_directory_button,
                     ft.Button(
-                        "Ladda senaste ->", on_click=self._on_load_latest_data_source
+                        f"{get_text('load_latest')} ->",
+                        on_click=self._on_load_latest_data_source,
                     ),
                     self._latest_root_directory,
                 ]
@@ -213,6 +225,13 @@ class FrameCreateMultipleZip(ft.Column):
                         dict(msg=f"Source {name} loaded with workflow {wflow}"),
                     )
                     wflow.set_data_sources(path)
+                    exp = dict(
+                        name="PolarsZipArchive",
+                        export_directory=str(
+                            self.main_app.config_component.zip_target_directory
+                        ),
+                    )
+                    wflow.update_exporters([exp])
                     results[name] = wflow.start_workflow()
             except Exception as e:
                 error = e
@@ -220,6 +239,13 @@ class FrameCreateMultipleZip(ft.Column):
 
             finally:
                 self.page.run_task(self._on_workflows_done, results, error)
+
+        if not self.main_app.config_component.zip_target_directory:
+            event.post_event(
+                event.Events.SHOW_DIALOG, dict(msg="No zip target directory selected!")
+            )
+            self._enable()
+            return
 
         threading.Thread(target=run, daemon=True).start()
 
@@ -235,7 +261,8 @@ class FrameCreateMultipleZip(ft.Column):
 
         if error:
             event.post_event(
-                event.Events.SHOW_DIALOG, dict(title="Något gick fel!", msg=str(error))
+                event.Events.SHOW_DIALOG,
+                dict(title=f"{get_text('something_went_wrong')}!", msg=str(error)),
             )
             self._enable()
             return
@@ -246,14 +273,14 @@ class FrameCreateMultipleZip(ft.Column):
         result_msg = check_results(results)
         data = dict()
         if error:
-            data["title"] = "Något gick fel..."
+            data["title"] = get_text("something_went_wrong")
             data["msg"] = str(error)
         elif result_msg:
-            data["title"] = "Något kanske gick fel..."
+            data["title"] = get_text("something_maybe_went_wrong")
             data["msg"] = result_msg
         else:
-            data["title"] = "Allt klart!"
-            msg_list = ["Zip-paket skapade för:"]
+            data["title"] = get_text("all_done")
+            msg_list = [f"{get_text('zip_packages_created_for')}:"]
             msg_list.extend(sorted(results.keys()))
             data["msg"] = "\n".join(msg_list)
         event.post_event(event.Events.SHOW_DIALOG, data)
@@ -266,8 +293,8 @@ class FrameCreateMultipleZip(ft.Column):
             event.post_event(
                 event.Events.SHOW_DIALOG,
                 dict(
-                    title="Inga källor valda",
-                    msg="Check för de källor som du vill skapa zip-paket av",
+                    title=get_text("no_sources_selected"),
+                    msg=get_text("check_sources"),
                 ),
             )
             return
