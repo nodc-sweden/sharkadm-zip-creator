@@ -1,5 +1,6 @@
 import asyncio
-from typing import Callable, Self
+from collections.abc import Callable
+from typing import Self
 
 import flet as ft
 import sharkadm.utils
@@ -135,7 +136,7 @@ class Countdown(ft.Text):
     async def update_timer(self):
         while self.seconds and self.running:
             mins, secs = divmod(self.seconds, 60)
-            self.value = "{:02d}:{:02d}".format(mins, secs)
+            self.value = f"{mins:02d}:{secs:02d}"
             self.update()
             await asyncio.sleep(1)
             self.seconds -= 1

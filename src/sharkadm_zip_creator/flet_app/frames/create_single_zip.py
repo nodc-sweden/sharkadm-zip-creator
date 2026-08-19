@@ -14,7 +14,9 @@ from sharkadm_zip_creator.flet_app.components import (
     SingleDataSourceComponent,
     WorkflowOptionsComponent,
 )
-from sharkadm_zip_creator.flet_app.components.operators_list import ListOperatorsComponent
+from sharkadm_zip_creator.flet_app.components.operators_list import (
+    ListOperatorsComponent,
+)
 from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import user_saves
 
@@ -56,40 +58,7 @@ class FrameCreateSingleZip(ft.Container):
             event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source, prio=75
         )
 
-        # self._option_tabs = ft.Tabs(
-        #     length=2,
-        #     expand=True,
-        #     content=ft.Column(
-        #         expand=True,
-        #         controls=[
-        #             ft.TabBar(
-        #                 tabs=[
-        #                     ft.Tab(label="Under körning"),
-        #                     ft.Tab(label="Efter körning"),
-        #                 ]
-        #             ),
-        #             ft.TabBarView(
-        #                 expand=True,
-        #                 controls=[
-        #                     ft.Container(
-        #                         content=ft.Column(
-        #                             [
-        #                                 self.workflow_options_component,
-        #                             ],
-        #                             expand=True,
-        #                         ),
-        #                         expand=True,
-        #                     ),
-        #                     ft.Container(
-        #                         alignment=ft.Alignment.CENTER,
-        #                         content=self.post_export_options_component,
-        #                         expand=True,
-        #                     ),
-        #                 ],
-        #             ),
-        #         ],
-        #     ),
-        # )
+        event.subscribe(event.Events.RUN_EXPORTER, self._run_exporter)
 
         self.content = ft.Column(
             [
@@ -135,8 +104,6 @@ class FrameCreateSingleZip(ft.Container):
 
     def _set_workflow(self, wflow: workflow.SHARKadmWorkflow) -> None:
         self._workflow = wflow
-        print("-" * 50)
-        print(f"{self._workflow.path=}")
         self._workflow_config_path.value = str(self._workflow.path)
         self._workflow_config_path.update()
 
@@ -161,6 +128,8 @@ class FrameCreateSingleZip(ft.Container):
         def run():
             result = None
             error = None
+
+            self.main_app._current_workflow = self._workflow
 
             try:
                 import time
@@ -252,7 +221,7 @@ class FrameCreateSingleZip(ft.Container):
             failed_msg = str(e)
             print(f"{failed_msg=}")
 
-    def run_exporter(self, **kwargs) -> None:
+    def _run_exporter(self, kwargs) -> None:
         if not self._workflow:
             return
         try:

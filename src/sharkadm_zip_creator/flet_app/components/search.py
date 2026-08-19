@@ -1,5 +1,6 @@
 import re
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import flet as ft
 from flet_app.language import get_text
@@ -91,10 +92,9 @@ class SearchComponent(ft.Row):
         new_list = []
         for item in lst:
             if self._regex.value:
-                if self._case_sensitive.value and re.search(text, item):
-                    new_list.append(item)
-                elif not self._case_sensitive.value and re.search(
-                    text, item, re.IGNORECASE
+                if (self._case_sensitive.value and re.search(text, item)) or (
+                    not self._case_sensitive.value
+                    and re.search(text, item, re.IGNORECASE)
                 ):
                     new_list.append(item)
             elif self._case_sensitive.value:
@@ -110,10 +110,8 @@ class SearchComponent(ft.Row):
         new_data = dict()
         for key, value in data.items():
             if self._regex.value:
-                if self._case_sensitive.value and re.search(text, key):
-                    new_data[key] = key
-                elif not self._case_sensitive.value and re.search(
-                    text, key, re.IGNORECASE
+                if (self._case_sensitive.value and re.search(text, key)) or (
+                    not self._case_sensitive.value and re.search(text, key, re.IGNORECASE)
                 ):
                     new_data[key] = key
             elif self._case_sensitive.value:

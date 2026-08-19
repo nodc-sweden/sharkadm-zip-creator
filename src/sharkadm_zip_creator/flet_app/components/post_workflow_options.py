@@ -57,7 +57,10 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         self, wflow: workflow.SHARKadmWorkflow, color: str | None = None
     ) -> None:
         self.reset()
-        wid_list = [ft.Text(self.label, color="black"), ft.Divider(height=9, thickness=3)]
+        wid_list = [
+            ft.Text(self.label, color="black"),
+            ft.Divider(height=9, thickness=3),
+        ]
         # for exp in wflow.exporters:
         for exp in self._get_exporters(wflow.exporters_info):
             wid = operators.PostOperatorCard(operator=exp)

@@ -1,4 +1,5 @@
 import threading
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -12,9 +13,10 @@ from sharkadm_zip_creator.flet_app.components import SearchComponent
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 
-@ft.control
+@dataclass
 class FrameCreateMultipleZip(ft.Column):
     expand: bool = True
+    main_app: Any = None
 
     def init(self):
         self._all_sources: dict[str, Path] = dict()
@@ -223,6 +225,13 @@ class FrameCreateMultipleZip(ft.Column):
                         dict(msg=f"Source {name} loaded with workflow {wflow}"),
                     )
                     wflow.set_data_sources(path)
+                    exp = dict(
+                        name="PolarsZipArchive",
+                        export_directory=str(
+                            self.main_app.config_component.zip_target_directory
+                        ),
+                    )
+                    wflow.update_exporters([exp])
                     results[name] = wflow.start_workflow()
             except Exception as e:
                 error = e
@@ -230,6 +239,13 @@ class FrameCreateMultipleZip(ft.Column):
 
             finally:
                 self.page.run_task(self._on_workflows_done, results, error)
+
+        if not self.main_app.config_component.zip_target_directory:
+            event.post_event(
+                event.Events.SHOW_DIALOG, dict(msg="No zip target directory selected!")
+            )
+            self._enable()
+            return
 
         threading.Thread(target=run, daemon=True).start()
 

@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import flet as ft
 from flet_app.language import get_text
@@ -56,6 +56,7 @@ class SingleDataSourceComponent(ft.Row):
         self._pick_directory_button = widgets.DirectoryPickerButton(
             title=get_text("select_a_data_source_from_folder"),
             on_pick=self._on_pick_new_source,
+            initial_directory=self._latest_source_path.value,
             dialog_title=get_text("select_a_folder"),
         )
 

@@ -5,7 +5,6 @@ import threading
 from queue import Queue
 
 import flet as ft
-from flet_app.language import get_text
 from sharkadm import event as sharkadm_event
 from sharkadm.sharkadm_logger import adm_logger, create_xlsx_report
 from sharkadm.workflow import SHARKadmWorkflow
@@ -18,6 +17,7 @@ from sharkadm_zip_creator.flet_app.frames import (
     FrameCreateMultipleZip,
     FrameCreateSingleZip,
 )
+from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import user_saves
 
 USER_DIR = utils.USER_DIR
@@ -236,16 +236,16 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                         ),
                         ft.Divider(),
                         # FAST DEL
-                        ft.Text("Välj loggnivåer:"),
+                        ft.Text(get_text("select_log_level")),
                         level_checkboxes,
                         ft.Row(
                             [
                                 ft.Button(
-                                    "Öppna log",
+                                    get_text("open_log"),
                                     on_click=self._on_ok_create_transform_dialog_log,
                                 ),
                                 ft.Button(
-                                    "Stäng",
+                                    get_text("close"),
                                     on_click=self._on_close_transform_dialog,
                                 ),
                             ],
@@ -271,7 +271,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._transform_dialog_text.update()
 
     def _on_ok_create_transform_dialog_log(self, e):
-        self._on_close_transform_dialog()
+        # self._on_close_transform_dialog()
         if not self._current_workflow:
             return
         create_xlsx_report(
@@ -332,7 +332,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             visible=self.source_type.source == SourceType.SINGLE, main_app=self
         )
         self._frame_create_multiple_zip = FrameCreateMultipleZip(
-            visible=self.source_type.source == SourceType.MULTIPLE,
+            visible=self.source_type.source == SourceType.MULTIPLE, main_app=self
         )
         # if hasattr(self, "_frame_create_single_zip"):
         #     # print(f"2: {self._frame_create_single_zip=}")
@@ -409,8 +409,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
     def _on_progress(self, data: dict) -> None:
         current = data.get("current", 1)
         total = data.get("total", 1)
-        if current > total:
-            current = total
+        current = min(current, total)
 
         msg = data.get("msg") or f"{data.get('title', '')} ({current} / {total})"
         self._progress_text.value = msg

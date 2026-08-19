@@ -1,6 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 import flet as ft
 
@@ -22,10 +22,17 @@ class SingleFilePickerButton(ft.Row):
             self.button,
         ]
 
+    def _get_initial_directory(self, initial_directory: str):
+        if initial_directory.strip():
+            path = Path(initial_directory)
+            if path.is_file():
+                initial_directory = str(path.parent)
+        return initial_directory
+
     async def handle_pick_file(self, e: ft.Event[ft.Control]):
         file = await ft.FilePicker().pick_files(
             allow_multiple=False,
-            initial_directory=self.initial_directory,
+            initial_directory=self._get_initial_directory(self.initial_directory),
             allowed_extensions=self.allowed_extensions or [],
             dialog_title=self.dialog_title or self.title,
         )
@@ -74,7 +81,9 @@ class DirectoryPickerButton(ft.Row):
 
     def init(self):
         self.button = ft.Button(
-            self.title, icon=ft.Icons.UPLOAD_FILE, on_click=self.handle_get_directory_path
+            self.title,
+            icon=ft.Icons.UPLOAD_FILE,
+            on_click=self.handle_get_directory_path,
         )
 
         self.controls = [

@@ -59,7 +59,10 @@ class WorkflowOptionsComponent(ft.Container):
 
         operators_info = self._get_show_options_for_operators(wflow)
 
-        wid_list = [ft.Text(self.label, color="black"), ft.Divider(height=9, thickness=3)]
+        wid_list = [
+            ft.Text(self.label, color="black"),
+            ft.Divider(height=9, thickness=3),
+        ]
         # for exp in wflow.exporters:
         for oper in self._get_operators(operators_info):
             print(f"{oper=}")

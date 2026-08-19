@@ -14,10 +14,9 @@ def get_transformer_translations() -> dict[str, str]:
     translations = dict()
     for trans in get_transformer_list():
         name = trans
-        if trans.startswith(("_")):
+        if trans.startswith("_"):
             continue
-        if name.startswith("Polars"):
-            name = name[6:]
+        name = name.removeprefix("Polars")
         translations[trans] = pascal_to_text(name)
     return translations
 
@@ -26,10 +25,9 @@ def get_exporter_translations() -> dict[str, str]:
     translations = dict()
     for exp in get_exporter_list():
         name = exp
-        if exp.startswith(("_")):
+        if exp.startswith("_"):
             continue
-        if name.startswith("Polars"):
-            name = name[6:]
+        name = name.removeprefix("Polars")
         name = pascal_to_text(name)
         name = f"Create {name}"
         translations[exp] = name
