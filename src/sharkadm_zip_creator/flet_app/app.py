@@ -196,14 +196,58 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._update_layout()
         self.update_page()
 
+    def _on_change_with_filter(self, e: ft.Event[ft.Checkbox]):
+        if (
+            self._transform_dialog_with_filter.value
+            and self._transform_dialog_as_table.value
+        ):
+            self._transform_dialog_as_table.value = False
+            self._transform_dialog_as_table.update()
+
+    def _on_change_as_table(self, e: ft.Event[ft.Checkbox]):
+        if (
+            self._transform_dialog_as_table.value
+            and self._transform_dialog_with_filter.value
+        ):
+            self._transform_dialog_with_filter.value = False
+            self._transform_dialog_with_filter.update()
+
     def _build_transform_dialog(self):
         self._alert_transform_levels = dict()
-        controls = []
-        for level in (adm_logger.DEBUG, adm_logger.INFO, adm_logger.WARNING):
-            self._alert_transform_levels[level] = ft.Checkbox(label=str(level).upper())
-            controls.append(self._alert_transform_levels[level])
-        self._alert_transform_levels[adm_logger.WARNING].value = True
-        level_checkboxes = ft.Column(controls)
+        controls1 = []
+        controls2 = []
+        for level in (adm_logger.DEBUG, adm_logger.INFO):
+            self._alert_transform_levels[level] = ft.Checkbox(
+                label=str(level).upper(),
+                on_change=self._on_change_log_level_in_transform_dialog,
+            )
+            controls1.append(self._alert_transform_levels[level])
+
+        for level in (adm_logger.WARNING, adm_logger.ERROR, adm_logger.CRITICAL):
+            self._alert_transform_levels[level] = ft.Checkbox(
+                label=str(level).upper(),
+                on_change=self._on_change_log_level_in_transform_dialog,
+            )
+            self._alert_transform_levels[level].value = True
+            controls2.append(self._alert_transform_levels[level])
+
+        self._transform_dialog_with_filter = ft.Checkbox(
+            label=get_text("use_filter"),
+            on_change=self._on_change_with_filter,
+            value=True,
+        )
+        self._transform_dialog_as_table = ft.Checkbox(
+            label=get_text("as_table"), on_change=self._on_change_as_table
+        )
+
+        # level_checkboxes = ft.Row([
+        #     ft.Column(controls1),
+        #     ft.Column(controls2)
+        # ])
+
+        level_checkboxes = ft.Row(
+            [ft.Text(get_text("select_log_levels")), ft.Row(controls1), ft.Row(controls2)]
+        )
 
         self._transform_dialog_title = ft.Text()
         self._transform_dialog_text = ft.Text(
@@ -215,13 +259,13 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._transform_dlg = ft.AlertDialog(
             modal=True,
             title=self._transform_dialog_title,
-            # ALLT innehåll läggs här
             content=ft.Container(
-                width=1000,
+                width=1100,
                 content=ft.Column(
                     [
                         # filter_row,
                         self._search_component,
+                        level_checkboxes,
                         # SCROLLBAR DEL
                         ft.Container(
                             # width=600,
@@ -236,8 +280,15 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                         ),
                         ft.Divider(),
                         # FAST DEL
-                        ft.Text(get_text("select_log_level")),
-                        level_checkboxes,
+                        # ft.Text(get_text("select_log_level")),
+                        # level_checkboxes,
+                        ft.Row(
+                            [
+                                self._transform_dialog_with_filter,
+                                self._transform_dialog_as_table,
+                            ],
+                            alignment=ft.MainAxisAlignment.END,
+                        ),
                         ft.Row(
                             [
                                 ft.Button(
@@ -257,21 +308,53 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             ),
         )
 
+    def _on_change_log_level_in_transform_dialog(self, e: ft.Event[ft.Checkbox]):
+        self._on_layout_search()
+
+    @staticmethod
+    def _sort_based_on_log_level(lst: list[str]) -> list[str]:
+        new_list = []
+        for level in [
+            adm_logger.CRITICAL,
+            adm_logger.ERROR,
+            adm_logger.WARNING,
+            adm_logger.INFO,
+            adm_logger.DEBUG,
+        ]:
+            new_items = [item for item in lst if item.startswith(level)]
+            if new_items:
+                new_list.extend(new_items)
+                new_list.append("")
+        return new_list
+
+    def _get_filter_transformer_dialog_logs(self) -> list[str]:
+        # Filter logs based on log level
+        log_levels = [
+            level for level, wid in self._alert_transform_levels.items() if wid.value
+        ]
+        transformer_dialog_logs = [
+            msg
+            for msg in self._current_transformer_dialog_logs
+            if msg.startswith(tuple(log_levels))
+        ]
+        return self._sort_based_on_log_level(transformer_dialog_logs)
+
     def _on_layout_search(self, text: str = "") -> None:
         if not self._search_component.text:
             self._transform_dialog_text.value = "\n".join(
-                self._current_transformer_dialog_logs
+                # self._current_transformer_dialog_logs
+                self._get_filter_transformer_dialog_logs()
             )
             self._transform_dialog_text.update()
             return
         filtered_logs = self._search_component.filter_list(
-            self._current_transformer_dialog_logs
+            # self._current_transformer_dialog_logs
+            self._get_filter_transformer_dialog_logs()
         )
         self._transform_dialog_text.value = "\n".join(filtered_logs)
         self._transform_dialog_text.update()
 
     def _on_ok_create_transform_dialog_log(self, e):
-        # self._on_close_transform_dialog()
         if not self._current_workflow:
             return
         create_xlsx_report(
@@ -283,6 +366,8 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                 ]
             ),
             open_file=True,
+            with_filter=self._transform_dialog_with_filter.value,
+            as_table=self._transform_dialog_as_table.value,
         )
 
     def _on_close_transform_dialog(self, e=None):

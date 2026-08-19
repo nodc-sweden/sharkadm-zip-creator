@@ -6,7 +6,6 @@ import flet as ft
 from sharkadm import event as sharkadm_event
 from sharkadm import sharkadm_exceptions, workflow
 from sharkadm.data import get_polars_data_holder
-from sharkadm.sharkadm_logger import adm_logger
 
 from sharkadm_zip_creator.flet_app import event
 from sharkadm_zip_creator.flet_app.components import (
@@ -79,16 +78,17 @@ class FrameCreateSingleZip(ft.Container):
         )
 
     def _on_log_transformation(self, data: dict[str, Any]) -> None:
-        if data.get("level") not in [
-            adm_logger.WARNING,
-            adm_logger.ERROR,
-            adm_logger.CRITICAL,
-        ]:
-            return
+        # if data.get("level") not in [
+        #     adm_logger.WARNING,
+        #     adm_logger.ERROR,
+        #     adm_logger.CRITICAL,
+        # ]:
+        #     return
         # level = data.get("level", "").upper()
         msg = data.get("msg", "")
+        level = data.get("level", "")
         event.post_event(event.Events.SHOW_ON_LOG_FRAME, msg)
-        self._transformation_logs.append(msg)
+        self._transformation_logs.append(f"{level}: {msg}")
         # self._transformation_logs.append(f"{level}: {msg}")
 
     def _on_change_source(self, data: dict):
@@ -116,7 +116,7 @@ class FrameCreateSingleZip(ft.Container):
     def save_export_options(self):
         data = {
             "post_workflow_exports":
-                self.post_export_options_component.workflow_export_options
+                self.post_export_options_component.workflow_export_options,
         }
         user_saves.add_settings(**data)
 
@@ -204,14 +204,12 @@ class FrameCreateSingleZip(ft.Container):
         self._transformation_logs = []
         print("on_create_zip!")
         if not self._workflow:
-            event.post_event(
-                event.Events.SHOW_INFO, dict(title=get_text("no_file_selected"))
-            )
+            event.post_event(event.Events.SHOW_INFO, get_text("no_file_selected"))
             return
         if not self.data_source.source_path:
             event.post_event(
                 event.Events.SHOW_INFO,
-                dict(title=get_text("missing_path_to_zip_packages")),
+                get_text("missing_path_to_zip_packages"),
             )
             return
         try:
