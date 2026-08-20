@@ -88,6 +88,8 @@ class SearchComponent(ft.Row):
             self._quick_search_row.controls.append(col)
 
     def filter_list(self, lst: list[str]) -> list[str]:
+        # print()
+        # print("-"*100)
         text = self.text
         new_list = []
         for item in lst:
@@ -103,6 +105,7 @@ class SearchComponent(ft.Row):
             else:
                 if text.upper() in item.upper():
                     new_list.append(item)
+                    # print(f"{self.text=}  :  {item=}")
         return new_list
 
     def filter_dict_keys(self, data: dict[str, Any]) -> dict[str, Any]:

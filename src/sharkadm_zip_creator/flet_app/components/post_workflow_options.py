@@ -64,6 +64,7 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         # for exp in wflow.exporters:
         for exp in self._get_exporters(wflow.exporters_info):
             wid = operators.PostOperatorCard(operator=exp)
+            wid.disabled = True
             wid_list.append(wid)
             wid_list.append(ft.Divider(height=9, thickness=3))
             self._workflow_export_widgets.append(wid)
@@ -86,3 +87,13 @@ class PostWorkflowExportOptionsComponent(ft.Container):
             self.page.window.height * constants.LIST_VIEW_HEIGHT_PERCENTAGE / 100
         )
         self.content.update()
+
+    def enable(self):
+        for wid in self._workflow_export_widgets:
+            wid.disabled = False
+            wid.update()
+
+    def disable(self):
+        for wid in self._workflow_export_widgets:
+            wid.disabled = True
+            wid.update()
