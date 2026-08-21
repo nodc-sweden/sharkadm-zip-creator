@@ -506,6 +506,8 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._on_show_info(text)
 
     def _open_dlg(self, dlg, *args):
+        if dlg.open:
+            return
         self.page.show_dialog(dlg)
 
     def _on_close_dialog(self, *args):

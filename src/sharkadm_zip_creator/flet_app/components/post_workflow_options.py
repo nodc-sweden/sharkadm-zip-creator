@@ -2,7 +2,7 @@ import flet as ft
 from flet_app.language import get_text
 from sharkadm import workflow
 
-from sharkadm_zip_creator.flet_app import constants
+from sharkadm_zip_creator.flet_app import constants, event
 from sharkadm_zip_creator.flet_app.components import operators
 
 
@@ -13,6 +13,11 @@ class PostWorkflowExportOptionsComponent(ft.Container):
     expand: bool = True
 
     def init(self):
+
+        event.subscribe(event.Events.ON_END_WORKFLOW, self.enable)
+        event.subscribe(event.Events.ON_START_WORKFLOW, self.disable)
+        event.subscribe(event.Events.ON_LOAD_SOURCE, self.disable)
+
         self._lv_color = ft.Colors.GREY_500
 
         self.lv = ft.ListView(
@@ -88,12 +93,12 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         )
         self.content.update()
 
-    def enable(self):
+    def enable(self, *args):
         for wid in self._workflow_export_widgets:
             wid.disabled = False
             wid.update()
 
-    def disable(self):
+    def disable(self, *args):
         for wid in self._workflow_export_widgets:
             wid.disabled = True
             wid.update()

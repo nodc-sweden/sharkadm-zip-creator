@@ -1,4 +1,5 @@
 import threading
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -194,12 +195,12 @@ class FrameCreateMultipleZip(ft.Column):
         self._select_all.update()
 
     def _disable(self):
-        event.post_event(event.Events.DISABLE, dict())
+        event.post_event(event.Events.DISABLE)
         self._button_create_zips.disabled = True
         self._button_create_zips.update()
 
     def _enable(self):
-        event.post_event(event.Events.ENABLE, dict())
+        event.post_event(event.Events.ENABLE)
         self._button_create_zips.disabled = False
         self._button_create_zips.update()
 
@@ -210,6 +211,7 @@ class FrameCreateMultipleZip(ft.Column):
 
             workflows = dict()
             results = dict()
+            event.post_event(event.Events.ON_START_WORKFLOW, None)
 
             try:
                 for name, path in self._get_selected().items():
@@ -239,6 +241,7 @@ class FrameCreateMultipleZip(ft.Column):
 
             finally:
                 self.page.run_task(self._on_workflows_done, results, error)
+                event.post_event(event.Events.ON_END_WORKFLOW, None)
 
         if not self.main_app.config_component.zip_target_directory:
             event.post_event(
@@ -302,8 +305,13 @@ class FrameCreateMultipleZip(ft.Column):
             self._disable()
             self._run_workflows()
         except Exception as e:
-            failed_msg = str(e)
-            print(f"{failed_msg=}")
+            event.post_event(
+                event.Events.SHOW_DIALOG,
+                dict(
+                    title=get_text("something_went_wrong"),
+                    msg=f"{e}: \n\n{traceback.format_exc()}",
+                ),
+            )
 
     def update_layout(self):
         self._container.height = int(
