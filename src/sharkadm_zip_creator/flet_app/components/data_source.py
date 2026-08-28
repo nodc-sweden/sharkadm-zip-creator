@@ -2,10 +2,10 @@ from collections.abc import Callable
 from pathlib import Path
 
 import flet as ft
-from flet_app.language import get_text
 
 from sharkadm_zip_creator.flet_app import event, widgets
 from sharkadm_zip_creator.flet_app.app_source import SourceType
+from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 

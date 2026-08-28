@@ -1,12 +1,12 @@
 from pathlib import Path
 
 import flet as ft
-from flet_app.language import get_text
 from sharkadm.config import sharkadm_config
 
 from sharkadm_zip_creator.flet_app import event, widgets
 from sharkadm_zip_creator.flet_app.components.data_source import SourceTypeComponent
 from sharkadm_zip_creator.flet_app.components.state import StateComponent
+from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 

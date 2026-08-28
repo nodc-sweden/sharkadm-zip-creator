@@ -4,11 +4,11 @@ from typing import Self
 
 import flet as ft
 import sharkadm.utils
-from flet_app.language import get_text
 from sharkadm.config.config import Config
 
 from sharkadm_zip_creator.flet_app import constants
 from sharkadm_zip_creator.flet_app.app_state import States
+from sharkadm_zip_creator.flet_app.language import get_text
 
 
 @ft.control

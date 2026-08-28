@@ -5,14 +5,15 @@ import threading
 from queue import Queue
 
 import flet as ft
-from flet_app.components.log_levels import LogLevelSelector
 from sharkadm import event as sharkadm_event
+from sharkadm import utils as sharkadm_utils
 from sharkadm.sharkadm_logger import adm_logger, create_xlsx_report
 from sharkadm.workflow import SHARKadmWorkflow
 
 from sharkadm_zip_creator.flet_app import app_source, app_state, event, saves, utils
 from sharkadm_zip_creator.flet_app.app_source import SourceType
 from sharkadm_zip_creator.flet_app.components import ConfigComponent, SearchComponent
+from sharkadm_zip_creator.flet_app.components.log_levels import LogLevelSelector
 from sharkadm_zip_creator.flet_app.frame_log import FrameLog
 from sharkadm_zip_creator.flet_app.frames import (
     FrameCreateMultipleZip,
@@ -215,7 +216,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
 
     def _build_transform_dialog(self):
         self._transform_dialog_with_filter = ft.Checkbox(
-            label=get_text("use_filter"),
+            label=get_text("with_filter"),
             on_change=self._on_change_with_filter,
             value=True,
         )
@@ -269,7 +270,11 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                             [
                                 ft.Button(
                                     get_text("open_log"),
-                                    on_click=self._on_ok_create_transform_dialog_log,
+                                    on_click=self._on_create_transform_dialog_log,
+                                ),
+                                ft.Button(
+                                    get_text("open_log_directory"),
+                                    on_click=self._on_open_transform_dialog_log_directory,
                                 ),
                                 ft.Button(
                                     get_text("close"),
@@ -326,21 +331,18 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._transform_dialog_text.value = "\n".join(filtered_logs)
         self._transform_dialog_text.update()
 
-    def _on_ok_create_transform_dialog_log(self, e):
+    def _on_create_transform_dialog_log(self, e):
         if not self._current_workflow:
             return
         create_xlsx_report(
-            log_filter=dict(
-                levels=[
-                    str(level)
-                    for level, wid in self._alert_transform_levels.items()
-                    if wid.value
-                ]
-            ),
+            log_filter=dict(levels=self._level_selector.levels),
             open_file=True,
             with_filter=self._transform_dialog_with_filter.value,
             as_table=self._transform_dialog_as_table.value,
         )
+
+    def _on_open_transform_dialog_log_directory(self, *args):
+        sharkadm_utils.open_file_or_directory(sharkadm_utils.get_export_directory())
 
     def _on_close_transform_dialog(self, e=None):
         self._transform_dlg.open = False
@@ -471,6 +473,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
     def _on_show_dialog(self, data: dict) -> None:
         title = data.get("title", get_text("important_info"))
         msg = data.get("msg", "Här borde det stå något annat förmodligen...")
+        print(f"{msg=}")
         self._on_show_info(msg)
         self._dialog_title.value = title
         self._dialog_text.value = msg

@@ -1,9 +1,9 @@
 import flet as ft
-from flet_app.language import get_text
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants
 from sharkadm_zip_creator.flet_app.components import operators
+from sharkadm_zip_creator.flet_app.language import get_text
 
 
 @ft.control

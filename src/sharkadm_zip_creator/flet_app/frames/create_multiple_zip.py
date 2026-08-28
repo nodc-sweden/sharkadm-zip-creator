@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Any
 
 import flet as ft
-from flet_app.language import get_text
 from sharkadm import workflow
 from sharkadm.data import get_polars_data_holder
 
 from sharkadm_zip_creator.flet_app import constants, event, widgets
 from sharkadm_zip_creator.flet_app.components import SearchComponent
+from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 
@@ -224,7 +224,7 @@ class FrameCreateMultipleZip(ft.Column):
                     )
                     event.post_event(
                         event.Events.SHOW_INFO,
-                        dict(msg=f"Source {name} loaded with workflow {wflow}"),
+                        f"Source {name} loaded with workflow {wflow}",
                     )
                     wflow.set_data_sources(path)
                     exp = dict(

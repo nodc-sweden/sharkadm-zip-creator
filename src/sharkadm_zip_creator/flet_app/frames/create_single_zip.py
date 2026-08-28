@@ -99,13 +99,22 @@ class FrameCreateSingleZip(ft.Container):
         # self._transformation_logs.append(f"{level}: {msg}")
 
     def _on_change_source(self, data: dict):
-        self.button_open_result.visible = False
-        self.button_open_result.update()
-        path = data["path"]
-        data_holder = get_polars_data_holder(path)
-        wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
-        wflow.set_data_sources(path)
-        self._set_workflow(wflow)
+        try:
+            self.button_open_result.visible = False
+            self.button_open_result.update()
+            path = data["path"]
+            data_holder = get_polars_data_holder(path)
+            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
+            wflow.set_data_sources(path)
+            self._set_workflow(wflow)
+        except Exception:
+            event.post_event(
+                event.Events.SHOW_DIALOG,
+                dict(
+                    title=get_text("something_went_wrong"),
+                    msg=str(traceback.format_exc()),
+                ),
+            )
 
     def _on_change_show_operators_info_switch(self, e: ft.Event[ft.Switch]):
         self.operators_component.visible = self._show_operators_info_switch.value
@@ -135,28 +144,16 @@ class FrameCreateSingleZip(ft.Container):
 
     def _start_workflow(self):
         def run():
-            # self.result = None
-            # self.error = None
-
             self.main_app._current_workflow = self._workflow
 
             try:
-                import time
-
-                t0 = time.perf_counter()
                 self.result = self._workflow.start_workflow()
-                print(f"run: {id(self.result)=}")
-                print(f"{time.perf_counter()-t0=}")
-            except Exception as e:
-                self.error = e
+            except Exception:
+                self.error = str(traceback.format_exc())
 
             finally:
                 self.page.run_task(self._on_workflow_done, self.result, self.error)
 
-        # print()
-        # print("=" * 100)
-        # print(f"{self.workflow_options_component.workflow_options=}")
-        # print()
         self._workflow.update_operators(self.workflow_options_component.workflow_options)
         self._workflow.update_exporters(self.workflow_options_component.workflow_options)
         exp = dict(
@@ -171,7 +168,7 @@ class FrameCreateSingleZip(ft.Container):
 
     async def _on_workflow_done(self, result, error):
         if error:
-            event.post_event(event.Events.SHOW_DIALOG, str(error))
+            event.post_event(event.Events.SHOW_DIALOG, dict(msg=str(error)))
             self._enable()
             return
 
@@ -179,25 +176,6 @@ class FrameCreateSingleZip(ft.Container):
         self._enable()
 
         self._open_transform_dialog()
-
-        # data = dict()
-        # if error:
-        #     data["title"] = get_text("something_went_wrong")
-        #
-        #     data["msg"] = str(error)
-        # elif result:
-        #     data["title"] = get_text("something_maybe_went_wrong")
-        #     data["msg"] = str(result)
-        # else:
-        #     if self._transformation_logs:
-        #         data["title"] = get_text("all_done_but")
-        #         data["msg"] = "\n".join(self._transformation_logs)
-        #         data["logs"] = self._transformation_logs
-        #         data["workflow"] = self._workflow
-        #     else:
-        #         data["title"] = get_text("all_done")
-        #         data["msg"] = data["title"]
-        # event.post_event(event.Events.SHOW_TRANSFORM_DIALOG, data)
         self.main_app.reset_progress()
         # saves.config_saves.export_saves()
         self.save_export_options()

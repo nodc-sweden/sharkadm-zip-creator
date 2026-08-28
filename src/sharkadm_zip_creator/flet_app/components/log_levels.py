@@ -1,8 +1,9 @@
 from collections.abc import Callable
 
 import flet as ft
-from flet_app.language import get_text
 from sharkadm.sharkadm_logger import adm_logger
+
+from sharkadm_zip_creator.flet_app.language import get_text
 
 LOG_LEVELS = [
     adm_logger.DEBUG,

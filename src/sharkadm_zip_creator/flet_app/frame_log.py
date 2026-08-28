@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from typing import Any
 
 import flet as ft
-from flet_app.components import SearchComponent
 from sharkadm import utils as sharkadm_utils
 
 from sharkadm_zip_creator.flet_app import utils
+from sharkadm_zip_creator.flet_app.components import SearchComponent
 from sharkadm_zip_creator.flet_app.language import get_text
 
 

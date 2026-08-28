@@ -3,7 +3,8 @@ from collections.abc import Callable
 from typing import Any
 
 import flet as ft
-from flet_app.language import get_text
+
+from sharkadm_zip_creator.flet_app.language import get_text
 
 
 @ft.control

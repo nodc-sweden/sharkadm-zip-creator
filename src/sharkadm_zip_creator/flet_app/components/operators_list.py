@@ -1,8 +1,8 @@
 import flet as ft
-from flet_app.language import get_text
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants
+from sharkadm_zip_creator.flet_app.language import get_text
 
 FONT_WEIGHT = ft.FontWeight.W_400
 TEXT_SIZE_LABEL_1 = 20
