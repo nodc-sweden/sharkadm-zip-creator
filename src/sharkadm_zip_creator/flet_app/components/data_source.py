@@ -1,11 +1,12 @@
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import flet as ft
 
 from sharkadm_zip_creator.flet_app import event, widgets
 from sharkadm_zip_creator.flet_app.app_source import SourceType
-from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 
@@ -37,8 +38,10 @@ class SourceTypeComponent(ft.Row):
             self.on_change(dict(value=str(e.control.value).lower()))
 
 
-@ft.control
+@dataclass
 class SingleDataSourceComponent(ft.Row):
+    main_app: Any = None
+
     def init(self):
         self._latest_source_path = ft.Text()
         self._latest_source_path.value = user_saves.get(
@@ -46,29 +49,29 @@ class SingleDataSourceComponent(ft.Row):
         )
 
         self._pick_file_button = widgets.SingleFilePickerButton(
-            title=get_text("select_a_data_source_from_file"),
+            title=self.main_app.language.get_text("select_a_data_source_from_file"),
             # title="Välj en datakälla från FIL",
             on_pick=self._on_pick_new_source,
             initial_directory=self._latest_source_path.value,
-            dialog_title=get_text("select_a_file"),
+            dialog_title=self.main_app.language.get_text("select_a_file"),
             allowed_extensions=["xlsx", "txt"],
         )
         self._pick_directory_button = widgets.DirectoryPickerButton(
-            title=get_text("select_a_data_source_from_folder"),
+            title=self.main_app.language.get_text("select_a_data_source_from_folder"),
             on_pick=self._on_pick_new_source,
             initial_directory=self._latest_source_path.value,
-            dialog_title=get_text("select_a_folder"),
+            dialog_title=self.main_app.language.get_text("select_a_folder"),
         )
 
         self.controls = [
             self._pick_file_button,
-            ft.Text(get_text("or")),
+            ft.Text(self.main_app.language.get_text("or")),
             self._pick_directory_button,
-            ft.Text(get_text("or")),
+            ft.Text(self.main_app.language.get_text("or")),
             ft.Row(
                 [
                     ft.Button(
-                        f"{get_text('load_latest')} ->",
+                        f"{self.main_app.language.get_text('load_latest')} ->",
                         on_click=self._on_load_latest_data_source,
                     ),
                     self._latest_source_path,

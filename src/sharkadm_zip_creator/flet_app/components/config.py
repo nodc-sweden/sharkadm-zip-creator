@@ -1,37 +1,40 @@
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import flet as ft
-from sharkadm.config import sharkadm_config
+from nodc_config import Config
 
 from sharkadm_zip_creator.flet_app import event, widgets
 from sharkadm_zip_creator.flet_app.components.data_source import SourceTypeComponent
 from sharkadm_zip_creator.flet_app.components.state import StateComponent
-from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import UserSavesKeys, user_saves
 
 
-@ft.control
+# @ft.control
+@dataclass
 class ConfigComponent(ft.Column):
     state: str = None
     source_type: str = None
+    main_app: Any = None
 
     def init(self):
-        self._config = sharkadm_config
+        self._nodc_conf: Config = self.main_app.nodc_conf
         self._set_config_state(self.state)
 
         self._state_component = StateComponent(
-            on_change=self._on_change_state, state=self.state
-        ).set_config(self._config)
+            on_change=self._on_change_state, state=self.state, main_app=self.main_app
+        ).set_config(self._nodc_conf)
 
         self._source_type_component = SourceTypeComponent(
             on_change=self._on_change_source_type, source_type=self.source_type
         )
 
-        self._config_root_path = ft.Text(str(self._config.root_dir))
+        self._config_root_path = ft.Text(str(self._nodc_conf.root_dir))
 
         self._select_zip_directory_button = widgets.DirectoryPickerButton(
-            title=get_text("change_destination"),
-            dialog_title=get_text("select_destination_folder"),
+            title=self.main_app.language.get_text("change_destination"),
+            dialog_title=self.main_app.language.get_text("select_destination_folder"),
             on_pick=self._on_pick_zip_directory,
         )
         self._zip_target_directory = ft.Text()
@@ -48,13 +51,13 @@ class ConfigComponent(ft.Column):
             ),
             ft.Row(
                 [
-                    ft.Text(get_text("configuration_folder:")),
+                    ft.Text(self.main_app.language.get_text("configuration_folder:")),
                     self._config_root_path,
                 ]
             ),
             ft.Row(
                 [
-                    ft.Text(get_text("zip_package_destination")),
+                    ft.Text(self.main_app.language.get_text("zip_package_destination")),
                     self._zip_target_directory,
                     self._select_zip_directory_button,
                 ]
@@ -69,14 +72,14 @@ class ConfigComponent(ft.Column):
 
     def _set_config_state(self, state: str) -> None:
         if state.upper() == "PROD":
-            self._config.set_to_prod()
+            self._nodc_conf.set_to_prod()
         elif state.upper() == "TEST":
-            self._config.set_to_test()
+            self._nodc_conf.set_to_test()
 
     def _on_change_state(self, data: dict) -> None:
         self._set_config_state(state=data["value"])
         event.post_event(event.Events.CHANGE_STATE, dict(state=data["value"]))
-        self._config_root_path.value = str(self._config.root_dir)
+        self._config_root_path.value = str(self._nodc_conf.root_dir)
         self._zip_target_directory.value = user_saves.get(
             UserSavesKeys.ZIP_TARGET_DIRECTORY, default="", state_sensitive=True
         )

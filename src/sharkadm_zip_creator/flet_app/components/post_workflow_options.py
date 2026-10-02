@@ -1,16 +1,20 @@
+from dataclasses import dataclass
+from typing import Any
+
 import flet as ft
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants, event
 from sharkadm_zip_creator.flet_app.components import operators
-from sharkadm_zip_creator.flet_app.language import get_text
 
 
-@ft.control
+@dataclass
 class PostWorkflowExportOptionsComponent(ft.Container):
-    label: str = get_text("export_options_after_zip_creation")
+    label: str = "export_options_after_zip_creation"
+    # label: str = get_text("export_options_after_zip_creation")
     color: str = constants.COLOR_EXPORT_OPTIONS_SECONDARY
     expand: bool = True
+    main_app: Any = None
 
     def init(self):
 
@@ -68,7 +72,8 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         ]
         # for exp in wflow.exporters:
         for exp in self._get_exporters(wflow.exporters_info):
-            wid = operators.PostOperatorCard(operator=exp)
+            print(f"{exp=}")
+            wid = operators.PostOperatorCard(operator=exp, main_app=self.main_app)
             wid.disabled = True
             wid_list.append(wid)
             wid_list.append(ft.Divider(height=9, thickness=3))

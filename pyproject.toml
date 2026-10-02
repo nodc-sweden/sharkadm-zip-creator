@@ -7,28 +7,63 @@ authors = [
 ]
 dependencies = [
     "flet>=0.24.1",
-    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git",
-    "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes.git",
-    "nodc-worms @ git+https://github.com/nodc-sweden/nodc-worms.git",
-    "nodc-bvol @ git+https://github.com/nodc-sweden/nodc-bvol.git",
-    "nodc-dyntaxa @ git+https://github.com/nodc-sweden/nodc-dyntaxa.git",
-    "nodc-geography @ git+https://github.com/nodc-sweden/nodc-geography.git",
-    "nodc-station @ git+https://github.com/nodc-sweden/nodc-station.git",
-    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git",
+    "flet-desktop>=0.85.3",
+    "polars==1.31.0",
+    "screeninfo>=0.8.1",
+    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@v4.1.0",
+    "nodc-station @ git+https://github.com/nodc-sweden/nodc-station.git@v2.1.0",
+    "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes.git@v3.0.0",
+    "nodc-worms @ git+https://github.com/nodc-sweden/nodc-worms.git@v1.0.0",
+    "nodc-bvol @ git+https://github.com/nodc-sweden/nodc-bvol.git@v0.2.0",
+    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git@v0.1.0",
+    "nodc-geography @ git+https://github.com/nodc-sweden/nodc-geography.git@v2.0.1",
+    "nodc-dyntaxa @ git+https://github.com/nodc-sweden/nodc-dyntaxa.git@v0.2.0",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.11, <3.13"
 readme = "README.md"
 license = {text = "MIT"}
 
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-
-[tool.pdm]
-distribution = true
-
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 dev = [
-    "pyinstaller>=4.5.1",
+    "pytest>=8.4.2",
+    "ruff>=0.13.1",
+    "pre-commit>=4.3.0",
+    "freezegun>=1.5.4",
 ]
+
+[tool.ruff]
+line-length = 90
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "A",  # flake8-builtins
+    "F",  # pyflakes
+    "E", # pycodestyle: error
+    "W",  # pycodestyle: warning
+    "I",  # isort: unsorted-imports
+    "RUF"  # Ruff-specific rules
+]
+
+per-file-ignores."__init__.py" = ["F401"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+#[tool.uv.sources]
+#sharkadm = { git = "https://github.com/nodc-sweden/SHARKadm.git", rev = "v4.1.0" }
+#nodc-station = { git = "https://github.com/nodc-sweden/nodc-station.git", rev = "v2.1.0" }
+#nodc-codes = { git = "https://github.com/nodc-sweden/nodc-codes.git", rev = "v3.0.0" }
+#nodc-bvol = { git = "https://github.com/nodc-sweden/nodc-bvol.git", rev = "v0.2.0" }
+#nodc-worms = { git = "https://github.com/nodc-sweden/nodc-worms.git", rev = "v1.0.0" }
+#nodc-occurrence-id = { git = "https://github.com/nodc-sweden/nodc-occurrence-id.git", rev = "v0.1.0" }
+#nodc-geography = { git = "https://github.com/nodc-sweden/nodc-geography.git", rev = "v2.0.1" }
+#nodc-dyntaxa = { git = "https://github.com/nodc-sweden/nodc-dyntaxa.git", rev = "v0.2.0" }
+
+
+

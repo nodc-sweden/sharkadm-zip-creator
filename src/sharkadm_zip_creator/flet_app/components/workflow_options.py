@@ -1,18 +1,23 @@
+from dataclasses import dataclass
+from typing import Any
+
 import flet as ft
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants
 from sharkadm_zip_creator.flet_app.components import operators
-from sharkadm_zip_creator.flet_app.language import get_text
 
 
-@ft.control
+@dataclass
 class WorkflowOptionsComponent(ft.Container):
-    label: str = get_text("options_during_zip_creation")
+    # label: str = "options_during_zip_creation"
+    # label: str = get_text("options_during_zip_creation")
     color: str = constants.COLOR_EXPORT_OPTIONS_SECONDARY
     expand: bool = True
+    main_app: Any = None
 
     def init(self):
+        self._label: str = self.main_app.language.get_text("options_during_zip_creation")
         self._lv_color = ft.Colors.GREY_500
 
         self.lv = ft.ListView(
@@ -41,7 +46,6 @@ class WorkflowOptionsComponent(ft.Container):
     def _get_operators(self, incoming_operators: list) -> list[dict]:
         operators = []
         for oper in incoming_operators:
-            print(f"{oper=}")
             for i, saved_oper in enumerate(self._saved_options[:]):
                 if oper["name"] == saved_oper["name"]:
                     updated_oper = {}
@@ -60,13 +64,14 @@ class WorkflowOptionsComponent(ft.Container):
         operators_info = self._get_show_options_for_operators(wflow)
 
         wid_list = [
-            ft.Text(self.label, color="black"),
+            ft.Text(self._label, color="black"),
             ft.Divider(height=9, thickness=3),
         ]
         # for exp in wflow.exporters:
         for oper in self._get_operators(operators_info):
-            print(f"{oper=}")
-            wid = operators.OperatorCard(operator=oper, allow_turn_off=False)
+            wid = operators.OperatorCard(
+                operator=oper, allow_turn_off=False, main_app=self.main_app
+            )
             if not wid.has_options:
                 continue
             wid_list.append(wid)

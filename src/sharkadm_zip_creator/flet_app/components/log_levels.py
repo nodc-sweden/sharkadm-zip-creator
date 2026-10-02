@@ -3,8 +3,6 @@ from collections.abc import Callable
 import flet as ft
 from sharkadm.sharkadm_logger import adm_logger
 
-from sharkadm_zip_creator.flet_app.language import get_text
-
 LOG_LEVELS = [
     adm_logger.DEBUG,
     adm_logger.INFO,
@@ -17,7 +15,8 @@ LOG_LEVELS = [
 @ft.control
 class LogLevelSelector(ft.Row):
     on_change: Callable = None
-    title: str = get_text("select_log_levels")
+    title: str = "select_log_levels"
+    # title: str = get_text("select_log_levels")
 
     def init(self):
         controls = []

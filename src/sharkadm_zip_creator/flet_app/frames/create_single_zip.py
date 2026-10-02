@@ -17,7 +17,6 @@ from sharkadm_zip_creator.flet_app.components import (
 from sharkadm_zip_creator.flet_app.components.operators_list import (
     ListOperatorsComponent,
 )
-from sharkadm_zip_creator.flet_app.language import get_text
 from sharkadm_zip_creator.flet_app.saves import user_saves
 
 
@@ -27,37 +26,47 @@ class FrameCreateSingleZip(ft.Container):
     expand: bool = True
     main_app: Any = None
 
+    def get_text(self, string: str) -> str:
+        return self.main_app.language.get_text(string)
+
     def init(self):
         self._transformation_logs: list[str] = []
         sharkadm_event.subscribe(
             sharkadm_event.Events.LOG_TRANSFORMATION, self._on_log_transformation
         )
+        sharkadm_event.subscribe(
+            sharkadm_event.Events.LOG_VALIDATION, self._on_log_transformation
+        )
 
         self._workflow: workflow.SHARKadmWorkflow | None = None
         self._workflow_config_path = ft.Text()
         config_path_row = ft.Row(
-            [ft.Text(get_text("configuration_file")), self._workflow_config_path],
+            [ft.Text(self.get_text("configuration_file")), self._workflow_config_path],
             expand=True,
             # [ft.Text("Konfigurationsfil:"), self._workflow_config_path], expand=True
         )
-        self.data_source = SingleDataSourceComponent()
+        self.data_source = SingleDataSourceComponent(main_app=self.main_app)
         self._show_operators_info_switch = ft.Switch(
-            label=get_text("show_operations"),
+            label=self.get_text("show_operations"),
             on_change=self._on_change_show_operators_info_switch,
         )
-        self.operators_component = ListOperatorsComponent()
-        self.workflow_options_component = WorkflowOptionsComponent()
-        self.post_export_options_component = PostWorkflowExportOptionsComponent()
+        self.operators_component = ListOperatorsComponent(main_app=self.main_app)
+        self.workflow_options_component = WorkflowOptionsComponent(main_app=self.main_app)
+        self.post_export_options_component = PostWorkflowExportOptionsComponent(
+            main_app=self.main_app
+        )
         self.button_create_zip = ft.Button(
-            get_text("create_zip_package"), on_click=self.on_create_zip
+            self.get_text("create_zip_package"), on_click=self.on_create_zip
         )
         self.button_open_result = ft.Button(
-            get_text("open_result"),
+            self.get_text("open_result"),
             on_click=self.on_open_result,
             visible=False,
         )
 
-        self.operators_component.visible = False
+        # self.operators_component.visible = False
+        # self.workflow_options_component.visible = True
+        # self.post_export_options_component.visible = True
 
         event.subscribe(
             event.Events.CHANGE_SINGLE_DATA_SOURCE, self._on_change_source, prio=75
@@ -65,19 +74,65 @@ class FrameCreateSingleZip(ft.Container):
 
         event.subscribe(event.Events.RUN_EXPORTER, self._run_exporter)
 
+        self._container_row = ft.Row(
+            [
+                ft.Container(
+                    content=self.workflow_options_component,
+                    expand=1,
+                ),
+                ft.Container(
+                    content=self.post_export_options_component,
+                    expand=1,
+                ),
+            ],
+            expand=True,
+        )
+
         self.content = ft.Column(
             [
                 self.data_source,
                 config_path_row,
                 self._show_operators_info_switch,
-                ft.Row(
-                    [
-                        self.operators_component,
-                        self.workflow_options_component,
-                        self.post_export_options_component,
-                    ],
-                    expand=True,
-                ),
+                self._container_row,
+                #                 ft.Row(
+                #                     [
+                #                         ft.Text("TEST 1"),
+                #                         self.operators_component,
+                #                         # ft.Container(
+                #                         #     content=self.operators_component,
+                #                         #     # width=300,
+                #                         #     height=200,
+                #                         #     border=ft.Border.all(1),
+                #                         # ),
+                #                         ft.Text("TEST 2"),
+                #                         ft.Container(
+                #                             content=self.workflow_options_component,
+                #                             # width=300,
+                #                             height=200,
+                #                             border=ft.Border.all(1),
+                #                         ),
+                #                         ft.Text("TEST 3"),
+                #                         ft.Container(
+                #                             content=self.post_export_options_component,
+                # #                             width=300,
+                #                             height=200,
+                #                             border=ft.Border.all(1),
+                #                         ),
+                #                     ],
+                #                     scroll=ft.ScrollMode.AUTO,
+                #                 ),
+                # ft.Row(
+                #     [
+                #         ft.Text("TEST 1"),
+                #         self.operators_component,
+                #         ft.Text("TEST 2"),
+                #         self.workflow_options_component,
+                #         ft.Text("TEST 3"),
+                #         self.post_export_options_component,
+                #         ft.Text("TEST 4"),
+                #     ],
+                #     expand=True,
+                # ),
                 self.button_create_zip,
                 self.button_open_result,
             ],
@@ -103,22 +158,54 @@ class FrameCreateSingleZip(ft.Container):
             self.button_open_result.visible = False
             self.button_open_result.update()
             path = data["path"]
-            data_holder = get_polars_data_holder(path)
-            wflow = workflow.get_dv_workflow_for_data_type(data_holder.data_type_internal)
+            data_holder = get_polars_data_holder(self.main_app.nodc_conf, path)
+            wflow = workflow.get_dv_workflow_for_data_type(
+                self.main_app.nodc_conf, data_holder.data_type_internal
+            )
             wflow.set_data_sources(path)
             self._set_workflow(wflow)
+            event.post_event(event.Events.SHOW_INFO, "Workflow loaded")
         except Exception:
             event.post_event(
                 event.Events.SHOW_DIALOG,
                 dict(
-                    title=get_text("something_went_wrong"),
+                    title=self.get_text("something_went_wrong"),
                     msg=str(traceback.format_exc()),
                 ),
             )
+            raise
 
     def _on_change_show_operators_info_switch(self, e: ft.Event[ft.Switch]):
-        self.operators_component.visible = self._show_operators_info_switch.value
-        self.operators_component.update()
+        if self._show_operators_info_switch.value:
+            self._container_row.controls = [
+                ft.Container(
+                    content=self.operators_component,
+                    expand=1,
+                ),
+                ft.Container(
+                    content=self.workflow_options_component,
+                    expand=1,
+                ),
+                ft.Container(
+                    content=self.post_export_options_component,
+                    expand=1,
+                ),
+            ]
+        else:
+            self._container_row.controls = [
+                ft.Container(
+                    content=self.workflow_options_component,
+                    expand=1,
+                ),
+                ft.Container(
+                    content=self.post_export_options_component,
+                    expand=1,
+                ),
+            ]
+            self._container_row.update()
+
+        # self.operators_component.visible = self._show_operators_info_switch.value
+        # self.operators_component.update()
 
     def _set_workflow(self, wflow: workflow.SHARKadmWorkflow) -> None:
         self._workflow = wflow
@@ -183,20 +270,20 @@ class FrameCreateSingleZip(ft.Container):
     def _open_transform_dialog(self):
         data = dict()
         if self.error:
-            data["title"] = get_text("something_went_wrong")
+            data["title"] = self.get_text("something_went_wrong")
 
             data["msg"] = str(self.error)
         elif self.result:
-            data["title"] = get_text("something_maybe_went_wrong")
+            data["title"] = self.get_text("something_maybe_went_wrong")
             data["msg"] = str(self.result)
         else:
             if self._transformation_logs:
-                data["title"] = get_text("all_done_but")
+                data["title"] = self.get_text("all_done_but")
                 data["msg"] = "\n".join(self._transformation_logs)
                 data["logs"] = self._transformation_logs
                 data["workflow"] = self._workflow
             else:
-                data["title"] = get_text("all_done")
+                data["title"] = self.get_text("all_done")
                 data["msg"] = data["title"]
         event.post_event(event.Events.SHOW_TRANSFORM_DIALOG, data)
 
@@ -223,12 +310,12 @@ class FrameCreateSingleZip(ft.Container):
         self._transformation_logs = []
         print("on_create_zip!")
         if not self._workflow:
-            event.post_event(event.Events.SHOW_INFO, get_text("no_file_selected"))
+            event.post_event(event.Events.SHOW_INFO, self.get_text("no_file_selected"))
             return
         if not self.data_source.source_path:
             event.post_event(
                 event.Events.SHOW_INFO,
-                get_text("missing_path_to_zip_packages"),
+                self.get_text("missing_path_to_zip_packages"),
             )
             return
         try:
@@ -239,7 +326,7 @@ class FrameCreateSingleZip(ft.Container):
             event.post_event(
                 event.Events.SHOW_DIALOG,
                 dict(
-                    title=get_text("something_went_wrong"),
+                    title=self.get_text("something_went_wrong"),
                     msg=f"{e}: \n\n{traceback.format_exc()}",
                 ),
             )
@@ -259,7 +346,7 @@ class FrameCreateSingleZip(ft.Container):
         try:
             self._workflow.export(**kwargs)
         except sharkadm_exceptions.DataHolderError:
-            self.main_app.show_info(dict(title=get_text("only_after_zip_creation")))
+            self.main_app.show_info(dict(title=self.get_text("only_after_zip_creation")))
         finally:
             self.save_export_options()
 

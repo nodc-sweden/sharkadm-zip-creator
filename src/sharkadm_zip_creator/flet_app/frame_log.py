@@ -3,46 +3,10 @@ from typing import Any
 
 import flet as ft
 from sharkadm import utils as sharkadm_utils
+from sharkadm.sharkadm_logger import adm_logger
 
 from sharkadm_zip_creator.flet_app import utils
 from sharkadm_zip_creator.flet_app.components import SearchComponent
-from sharkadm_zip_creator.flet_app.language import get_text
-
-
-@dataclass
-class oldFrameLog(ft.Row):
-    main_app: Any = None
-    lv = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
-    expand = True
-
-    def init(self):
-        col = ft.Column(
-            [
-                ft.ElevatedButton(
-                    get_text("open_log_directory"), on_click=self._open_log_directory
-                ),
-                self.lv,
-            ],
-            expand=True,
-        )
-
-        self.controls.append(col)
-
-    def _open_log_directory(self, *args):
-        if not utils.USER_DIR.exists():
-            return
-        sharkadm_utils.open_file_or_directory(utils.USER_DIR)
-
-    def clear_text(self) -> None:
-        self.lv.controls = []
-        self.lv.update()
-
-    def add_text(self, text: str) -> None:
-        self.lv.controls.append(ft.Text(text))
-        self.lv.update()
-
-    def add_empty_line(self) -> None:
-        self.add_text("\n")
 
 
 @dataclass
@@ -54,7 +18,9 @@ class FrameLog(ft.Row):
     def init(self):
         self._logs: list[str] = []
         self._text = ft.Text()
-        self._search_component = SearchComponent(on_change=self._on_search)
+        self._search_component = SearchComponent(
+            on_change=self._on_search, main_app=self.main_app
+        )
 
         self._container = ft.Container(
             width=1100,
@@ -74,8 +40,18 @@ class FrameLog(ft.Row):
                         ),
                     ),
                     ft.Divider(),
-                    ft.Button(
-                        get_text("open_log_directory"), on_click=self._open_log_directory
+                    ft.Row(
+                        [
+                            ft.Button(
+                                self.main_app.language.get_text("open_log_directory"),
+                                on_click=self._open_log_directory,
+                            ),
+                            ft.Button(
+                                self.main_app.language.get_text("reset_log"),
+                                on_click=lambda: adm_logger.reset_log(),
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
                 ],
                 expand=True,
