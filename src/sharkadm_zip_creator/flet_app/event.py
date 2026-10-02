@@ -14,6 +14,9 @@ class Events(StrEnum):
     RESET_PROGRESS = auto()
     DISABLE = auto()
     ENABLE = auto()
+    ON_START_WORKFLOW = auto()
+    ON_END_WORKFLOW = auto()
+    ON_LOAD_SOURCE = auto()
 
 
 _subscribers = dict((str(ev), dict()) for ev in Events)

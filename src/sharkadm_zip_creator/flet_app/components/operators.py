@@ -1,21 +1,24 @@
+from dataclasses import dataclass
+from typing import Any
+
 import flet as ft
 
 from sharkadm_zip_creator.flet_app import event
-from sharkadm_zip_creator.flet_app.language import get_text
 
 
-@ft.control
+@dataclass
 class OperatorCard(ft.Card):
     allow_turn_off: bool = True
     operator: dict = None
     expand: bool = True
+    main_app: Any = None
 
     def init(self):
         self.name = self.operator["name"]
 
         self.operator_widgets = {}
 
-        name = get_text(self.operator["name"])
+        name = self.main_app.language.get_text(self.operator["name"])
         print(f"{name=}")
         self._main_cb = ft.Checkbox(name, on_change=self._on_change_main)
         if not self.allow_turn_off:
@@ -29,16 +32,16 @@ class OperatorCard(ft.Card):
             if key in ["name", "active"]:
                 continue
             if type(value) is bool:
-                wid = ft.Checkbox(get_text(key))
+                wid = ft.Checkbox(self.main_app.language.get_text(key))
                 wid.value = value
             elif type(value) is int:
                 wid = ft.TextField(
-                    label=get_text(key),
+                    label=self.main_app.language.get_text(key),
                     value=value,
                     input_filter=ft.NumbersOnlyInputFilter(),
                 )
             else:
-                wid = ft.Text(get_text(key))
+                wid = ft.Text(self.main_app.language.get_text(key))
             self.operator_widgets[key] = wid
             self._children_col.controls.append(wid)
 
@@ -73,11 +76,12 @@ class OperatorCard(ft.Card):
         return info
 
 
-@ft.control
+@dataclass
 class PostOperatorCard(ft.Card):
     allow_turn_off: bool = True
     operator: dict = None
     expand: bool = True
+    main_app: Any = None
 
     def init(self):
         self.expand = True
@@ -85,7 +89,7 @@ class PostOperatorCard(ft.Card):
 
         self.operator_widgets = {}
 
-        name = get_text(self.operator["name"])
+        name = self.main_app.language.get_text(self.operator["name"])
         self._main_cb = ft.Button(name, on_click=self._on_click_main)
 
         self._children_col = ft.Column()
@@ -93,10 +97,10 @@ class PostOperatorCard(ft.Card):
             if key in ["name", "active"]:
                 continue
             if type(value) is bool:
-                wid = ft.Checkbox(get_text(key))
+                wid = ft.Checkbox(self.main_app.language.get_text(key))
                 wid.value = value
             else:
-                wid = ft.Text(get_text(key))
+                wid = ft.Text(self.main_app.language.get_text(key))
             self.operator_widgets[key] = wid
             self._children_col.controls.append(wid)
 

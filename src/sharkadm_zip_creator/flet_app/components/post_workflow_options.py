@@ -1,18 +1,27 @@
+from dataclasses import dataclass
+from typing import Any
+
 import flet as ft
-from flet_app.language import get_text
 from sharkadm import workflow
 
-from sharkadm_zip_creator.flet_app import constants
+from sharkadm_zip_creator.flet_app import constants, event
 from sharkadm_zip_creator.flet_app.components import operators
 
 
-@ft.control
+@dataclass
 class PostWorkflowExportOptionsComponent(ft.Container):
-    label: str = get_text("export_options_after_zip_creation")
+    label: str = "export_options_after_zip_creation"
+    # label: str = get_text("export_options_after_zip_creation")
     color: str = constants.COLOR_EXPORT_OPTIONS_SECONDARY
     expand: bool = True
+    main_app: Any = None
 
     def init(self):
+
+        event.subscribe(event.Events.ON_END_WORKFLOW, self.enable)
+        event.subscribe(event.Events.ON_START_WORKFLOW, self.disable)
+        event.subscribe(event.Events.ON_LOAD_SOURCE, self.disable)
+
         self._lv_color = ft.Colors.GREY_500
 
         self.lv = ft.ListView(
@@ -63,7 +72,9 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         ]
         # for exp in wflow.exporters:
         for exp in self._get_exporters(wflow.exporters_info):
-            wid = operators.PostOperatorCard(operator=exp)
+            print(f"{exp=}")
+            wid = operators.PostOperatorCard(operator=exp, main_app=self.main_app)
+            wid.disabled = True
             wid_list.append(wid)
             wid_list.append(ft.Divider(height=9, thickness=3))
             self._workflow_export_widgets.append(wid)
@@ -86,3 +97,13 @@ class PostWorkflowExportOptionsComponent(ft.Container):
             self.page.window.height * constants.LIST_VIEW_HEIGHT_PERCENTAGE / 100
         )
         self.content.update()
+
+    def enable(self, *args):
+        for wid in self._workflow_export_widgets:
+            wid.disabled = False
+            wid.update()
+
+    def disable(self, *args):
+        for wid in self._workflow_export_widgets:
+            wid.disabled = True
+            wid.update()

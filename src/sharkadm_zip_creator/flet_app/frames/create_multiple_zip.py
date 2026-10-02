@@ -1,10 +1,10 @@
 import threading
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import flet as ft
-from flet_app.language import get_text
 from sharkadm import workflow
 from sharkadm.data import get_polars_data_holder
 
@@ -26,29 +26,40 @@ class FrameCreateMultipleZip(ft.Column):
             UserSavesKeys.LATEST_MULTIPLE_DATA_SOURCE_ROOT, ""
         )
 
-        self._search_component = SearchComponent(on_change=self._on_filter_change)
+        self._search_component = SearchComponent(
+            on_change=self._on_filter_change, main_app=self.main_app
+        )
 
         self._nr_loaded = ft.Text()
         self._nr_filtered = ft.Text()
         self._nr_selected = ft.Text()
 
         row_nr_loaded = ft.Row(
-            [ft.Text(f"{get_text('select_a_folder')}:"), self._nr_loaded]
+            [
+                ft.Text(f"{self.main_app.language.get_text('select_a_folder')}:"),
+                self._nr_loaded,
+            ]
         )
         row_nr_filtered = ft.Row(
-            [ft.Text(f"{get_text('number_filtered')}:"), self._nr_filtered]
+            [
+                ft.Text(f"{self.main_app.language.get_text('number_filtered')}:"),
+                self._nr_filtered,
+            ]
         )
         row_nr_selected = ft.Row(
-            [ft.Text(f"{get_text('number_selected')}:"), self._nr_selected]
+            [
+                ft.Text(f"{self.main_app.language.get_text('number_selected')}:"),
+                self._nr_selected,
+            ]
         )
 
         nr_row = ft.Row([row_nr_loaded, row_nr_filtered, row_nr_selected])
 
         self._pick_directory_button = widgets.DirectoryPickerButton(
-            title=get_text("select_a_root_folder_for_data"),
+            title=self.main_app.language.get_text("select_a_root_folder_for_data"),
             on_pick=self._on_pick_new_root,
             initial_directory=self._latest_root_directory.value,
-            dialog_title=get_text("select_a_root_folder_for_data"),
+            dialog_title=self.main_app.language.get_text("select_a_root_folder_for_data"),
         )
 
         self._lv_color = ft.Colors.GREY_500
@@ -62,11 +73,12 @@ class FrameCreateMultipleZip(ft.Column):
         )
 
         self._select_all = ft.Checkbox(
-            get_text("select_all"), on_change=self._on_select_all
+            self.main_app.language.get_text("select_all"), on_change=self._on_select_all
         )
 
         self._button_create_zips = ft.Button(
-            get_text("create_zip_packages_for_selected"), on_click=self._on_create_zips
+            self.main_app.language.get_text("create_zip_packages_for_selected"),
+            on_click=self._on_create_zips,
         )
 
         self._container = ft.Container(
@@ -81,7 +93,7 @@ class FrameCreateMultipleZip(ft.Column):
                 [
                     self._pick_directory_button,
                     ft.Button(
-                        f"{get_text('load_latest')} ->",
+                        f"{self.main_app.language.get_text('load_latest')} ->",
                         on_click=self._on_load_latest_data_source,
                     ),
                     self._latest_root_directory,
@@ -194,12 +206,12 @@ class FrameCreateMultipleZip(ft.Column):
         self._select_all.update()
 
     def _disable(self):
-        event.post_event(event.Events.DISABLE, dict())
+        event.post_event(event.Events.DISABLE)
         self._button_create_zips.disabled = True
         self._button_create_zips.update()
 
     def _enable(self):
-        event.post_event(event.Events.ENABLE, dict())
+        event.post_event(event.Events.ENABLE)
         self._button_create_zips.disabled = False
         self._button_create_zips.update()
 
@@ -210,19 +222,20 @@ class FrameCreateMultipleZip(ft.Column):
 
             workflows = dict()
             results = dict()
+            event.post_event(event.Events.ON_START_WORKFLOW, None)
 
             try:
                 for name, path in self._get_selected().items():
-                    data_holder = get_polars_data_holder(path)
+                    data_holder = get_polars_data_holder(self.main_app.nodc_conf, path)
                     wflow = workflows.setdefault(
                         data_holder.data_type_internal,
                         workflow.get_dv_workflow_for_data_type(
-                            data_holder.data_type_internal
+                            self.main_app.nodc_conf, data_holder.data_type_internal
                         ),
                     )
                     event.post_event(
                         event.Events.SHOW_INFO,
-                        dict(msg=f"Source {name} loaded with workflow {wflow}"),
+                        f"Source {name} loaded with workflow {wflow}",
                     )
                     wflow.set_data_sources(path)
                     exp = dict(
@@ -239,6 +252,7 @@ class FrameCreateMultipleZip(ft.Column):
 
             finally:
                 self.page.run_task(self._on_workflows_done, results, error)
+                event.post_event(event.Events.ON_END_WORKFLOW, None)
 
         if not self.main_app.config_component.zip_target_directory:
             event.post_event(
@@ -262,7 +276,10 @@ class FrameCreateMultipleZip(ft.Column):
         if error:
             event.post_event(
                 event.Events.SHOW_DIALOG,
-                dict(title=f"{get_text('something_went_wrong')}!", msg=str(error)),
+                dict(
+                    title=f"{self.main_app.language.get_text('something_went_wrong')}!",
+                    msg=str(error),
+                ),
             )
             self._enable()
             return
@@ -273,17 +290,27 @@ class FrameCreateMultipleZip(ft.Column):
         result_msg = check_results(results)
         data = dict()
         if error:
-            data["title"] = get_text("something_went_wrong")
+            data["title"] = self.main_app.language.get_text("something_went_wrong")
             data["msg"] = str(error)
         elif result_msg:
-            data["title"] = get_text("something_maybe_went_wrong")
+            data["title"] = self.main_app.language.get_text("something_maybe_went_wrong")
             data["msg"] = result_msg
         else:
-            data["title"] = get_text("all_done")
-            msg_list = [f"{get_text('zip_packages_created_for')}:"]
+            data["title"] = self.main_app.language.get_text("all_done")
+            msg_list = [f"{self.main_app.language.get_text('zip_packages_created_for')}:"]
             msg_list.extend(sorted(results.keys()))
             data["msg"] = "\n".join(msg_list)
-        event.post_event(event.Events.SHOW_DIALOG, data)
+        try:
+            event.post_event(event.Events.SHOW_DIALOG, data)
+        except Exception:
+            event.post_event(
+                event.Events.SHOW_DIALOG,
+                dict(
+                    title="Something whent wrong when trying to show result",
+                    msg=str(traceback.format_exc()),
+                ),
+            )
+
         event.post_event(event.Events.RESET_PROGRESS, dict())
         # saves.config_saves.export_saves()
         # self.save_export_options()
@@ -293,8 +320,8 @@ class FrameCreateMultipleZip(ft.Column):
             event.post_event(
                 event.Events.SHOW_DIALOG,
                 dict(
-                    title=get_text("no_sources_selected"),
-                    msg=get_text("check_sources"),
+                    title=self.main_app.language.get_text("no_sources_selected"),
+                    msg=self.main_app.language.get_text("check_sources"),
                 ),
             )
             return
@@ -302,8 +329,13 @@ class FrameCreateMultipleZip(ft.Column):
             self._disable()
             self._run_workflows()
         except Exception as e:
-            failed_msg = str(e)
-            print(f"{failed_msg=}")
+            event.post_event(
+                event.Events.SHOW_DIALOG,
+                dict(
+                    title=self.main_app.language.get_text("something_went_wrong"),
+                    msg=f"{e}: \n\n{traceback.format_exc()}",
+                ),
+            )
 
     def update_layout(self):
         self._container.height = int(

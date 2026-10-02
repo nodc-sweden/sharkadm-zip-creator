@@ -1,21 +1,22 @@
 import asyncio
 from collections.abc import Callable
-from typing import Self
+from dataclasses import dataclass
+from typing import Any, Self
 
 import flet as ft
 import sharkadm.utils
-from flet_app.language import get_text
-from sharkadm.config.config import Config
+from nodc_config import Config
 
 from sharkadm_zip_creator.flet_app import constants
 from sharkadm_zip_creator.flet_app.app_state import States
 
 
-@ft.control
+@dataclass
 class StateComponent(ft.Container):
     on_change: Callable = None
     border_radius: int = 20
     state: str = None
+    main_app: Any = None
 
     def init(self):
         self._running_check_sync: bool = False
@@ -43,12 +44,13 @@ class StateComponent(ft.Container):
             value=str(self.state).upper(),
         )
         self._sync_test_button = ft.Button(
-            get_text("sync_test"),
+            self.main_app.language.get_text("sync_test"),
             on_click=self._on_sync_test,
             tooltip=self._sync_test_tooltip,
         )
         self._auto_sync_test_switch = ft.Switch(
-            label=get_text("sync_test_automatic"), on_change=self._on_auto_sync_test
+            label=self.main_app.language.get_text("sync_test_automatic"),
+            on_change=self._on_auto_sync_test,
         )
         self.content = ft.Row(
             [
@@ -71,9 +73,15 @@ class StateComponent(ft.Container):
             # old_title = self.
             if not self._config.test_is_synced_with_prod:
                 sharkadm.utils.clear_cache()
-                lines = [f"{get_text('unsynced_files')}:", *self._config.unsynced_files]
+                lines = [
+                    f"{self.main_app.language.get_text('unsynced_files')}:",
+                    *self._config.unsynced_files,
+                ]
                 self._sync_test_tooltip.message = "\n".join(lines)
-                self._sync_test_button.content = get_text("sync_test_is_not_updated")
+                self._sync_test_button.content = self.main_app.language.get_text(
+                    "sync_test_is_not_updated"
+                )
+                self._sync_test_button.bgcolor = "pink"
                 try:
                     self._sync_test_button.update()
                 except RuntimeError:
@@ -95,7 +103,8 @@ class StateComponent(ft.Container):
         self._config.sync_test_with_prod()
         sharkadm.utils.clear_cache()
         self._sync_test_tooltip.message = ""
-        self._sync_test_button.content = get_text("sync_test")
+        self._sync_test_button.content = self.main_app.language.get_text("sync_test")
+        self._sync_test_button.bgcolor = None
         self._sync_test_button.update()
 
     def _on_auto_sync_test(self, e: ft.Event[ft.Switch]) -> None:

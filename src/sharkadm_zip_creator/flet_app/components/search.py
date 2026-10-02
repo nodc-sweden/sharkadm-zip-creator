@@ -1,32 +1,37 @@
 import re
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import flet as ft
-from flet_app.language import get_text
 
 
-@ft.control
+@dataclass
 class SearchComponent(ft.Row):
     on_change: Callable = None
+    main_app: Any = None
 
     def init(self):
+        # print(f"{self.page=}")
+        # print(f"{self.page.data=}")
         self._filter_field = ft.TextField(
-            label=get_text("filter"),
+            label=self.main_app.language.get_text("filter"),
             icon=ft.Icons.SEARCH,
             multiline=False,
             on_change=self._on_change_search_field,
         )
 
         btn_clear_filter_field = ft.Button(
-            get_text("clear"), on_click=self._on_clear_filter_field
+            self.main_app.language.get_text("clear"), on_click=self._on_clear_filter_field
         )
 
         self._case_sensitive = ft.Switch(
-            label=get_text("case_sensitive"), on_change=self._on_change_search_field
+            label=self.main_app.language.get_text("case_sensitive"),
+            on_change=self._on_change_search_field,
         )
         self._regex = ft.Switch(
-            label=get_text("use_regex"), on_change=self._on_change_search_field
+            label=self.main_app.language.get_text("use_regex"),
+            on_change=self._on_change_search_field,
         )
         self._quick_search_row = ft.Row()
 
@@ -88,6 +93,8 @@ class SearchComponent(ft.Row):
             self._quick_search_row.controls.append(col)
 
     def filter_list(self, lst: list[str]) -> list[str]:
+        # print()
+        # print("-"*100)
         text = self.text
         new_list = []
         for item in lst:
@@ -103,6 +110,7 @@ class SearchComponent(ft.Row):
             else:
                 if text.upper() in item.upper():
                     new_list.append(item)
+                    # print(f"{self.text=}  :  {item=}")
         return new_list
 
     def filter_dict_keys(self, data: dict[str, Any]) -> dict[str, Any]:

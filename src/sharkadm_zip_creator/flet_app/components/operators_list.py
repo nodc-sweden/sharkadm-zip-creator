@@ -1,5 +1,7 @@
+from dataclasses import dataclass
+from typing import Any
+
 import flet as ft
-from flet_app.language import get_text
 from sharkadm import workflow
 
 from sharkadm_zip_creator.flet_app import constants
@@ -9,9 +11,18 @@ TEXT_SIZE_LABEL_1 = 20
 TEXT_SIZE_LABEL_2 = 16
 
 
-@ft.control
+@dataclass
 class ListOperatorsComponent(ft.Container):
     expand: bool = True
+    # expand: bool = False
+    main_app: Any = None
+
+    # @ft.control
+    # class ListOperatorsComponent(ft.Container):
+    #     main_app: InitVar[Any]
+
+    # def __post_init__(self, main_app):
+    #     self._main_app = main_app
 
     def init(self):
         self._lv_color = ft.Colors.GREY_500
@@ -40,7 +51,7 @@ class ListOperatorsComponent(ft.Container):
         text_color = "black"
         self.lv.controls.append(
             ft.Text(
-                f"{get_text('operations_for_data_type')} "
+                f"{self.main_app.language.get_text('operations_for_data_type')} "
                 f"{wflow.data_type.data_type_in_data}",
                 size=TEXT_SIZE_LABEL_1,
                 weight=FONT_WEIGHT,
@@ -53,7 +64,7 @@ class ListOperatorsComponent(ft.Container):
             self.lv.controls.append(ft.Divider())
             self.lv.controls.append(
                 ft.Text(
-                    get_text("operations"),
+                    self.main_app.language.get_text("operations"),
                     size=TEXT_SIZE_LABEL_2,
                     weight=FONT_WEIGHT,
                     color=text_color,
@@ -81,7 +92,7 @@ class ListOperatorsComponent(ft.Container):
             self.lv.controls.append(ft.Divider())
             self.lv.controls.append(
                 ft.Text(
-                    get_text("exports"),
+                    self.main_app.language.get_text("exports"),
                     size=TEXT_SIZE_LABEL_2,
                     weight=FONT_WEIGHT,
                     color=text_color,
@@ -102,7 +113,10 @@ class ListOperatorsComponent(ft.Container):
                         expand=True,
                     )
                 )
-        self.lv.update()
+        try:
+            self.lv.update()
+        except RuntimeError:
+            pass
 
     def set_height(self):
         self.content.height = int(

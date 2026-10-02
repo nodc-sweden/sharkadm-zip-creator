@@ -5,19 +5,22 @@ import threading
 from queue import Queue
 
 import flet as ft
+from nodc_config import Config
 from sharkadm import event as sharkadm_event
+from sharkadm import utils as sharkadm_utils
 from sharkadm.sharkadm_logger import adm_logger, create_xlsx_report
 from sharkadm.workflow import SHARKadmWorkflow
 
 from sharkadm_zip_creator.flet_app import app_source, app_state, event, saves, utils
 from sharkadm_zip_creator.flet_app.app_source import SourceType
 from sharkadm_zip_creator.flet_app.components import ConfigComponent, SearchComponent
+from sharkadm_zip_creator.flet_app.components.log_levels import LogLevelSelector
 from sharkadm_zip_creator.flet_app.frame_log import FrameLog
 from sharkadm_zip_creator.flet_app.frames import (
     FrameCreateMultipleZip,
     FrameCreateSingleZip,
 )
-from sharkadm_zip_creator.flet_app.language import get_text
+from sharkadm_zip_creator.flet_app.language import Language
 from sharkadm_zip_creator.flet_app.saves import user_saves
 
 USER_DIR = utils.USER_DIR
@@ -27,7 +30,9 @@ log_buffer = Queue()
 
 
 class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
-    def __init__(self):
+    def __init__(self, nodc_conf: Config):
+        self.nodc_conf = nodc_conf
+        self.language = Language(nodc_conf=nodc_conf)
         app_state.AppState.__init__(self)
         app_source.AppSource.__init__(self)
         print(f"{self.state=}")
@@ -94,6 +99,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             os.remove(self.log_file_path)
 
     def _add_to_log_file(self, text: str) -> None:
+        print(f"{text=}")
         with open(self.log_file_path, "a", encoding="cp1252") as fid:
             fid.write(f"{text}\n")
 
@@ -213,40 +219,17 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             self._transform_dialog_with_filter.update()
 
     def _build_transform_dialog(self):
-        self._alert_transform_levels = dict()
-        controls1 = []
-        controls2 = []
-        for level in (adm_logger.DEBUG, adm_logger.INFO):
-            self._alert_transform_levels[level] = ft.Checkbox(
-                label=str(level).upper(),
-                on_change=self._on_change_log_level_in_transform_dialog,
-            )
-            controls1.append(self._alert_transform_levels[level])
-
-        for level in (adm_logger.WARNING, adm_logger.ERROR, adm_logger.CRITICAL):
-            self._alert_transform_levels[level] = ft.Checkbox(
-                label=str(level).upper(),
-                on_change=self._on_change_log_level_in_transform_dialog,
-            )
-            self._alert_transform_levels[level].value = True
-            controls2.append(self._alert_transform_levels[level])
-
         self._transform_dialog_with_filter = ft.Checkbox(
-            label=get_text("use_filter"),
+            label=self.language.get_text("with_filter"),
             on_change=self._on_change_with_filter,
             value=True,
         )
         self._transform_dialog_as_table = ft.Checkbox(
-            label=get_text("as_table"), on_change=self._on_change_as_table
+            label=self.language.get_text("as_table"), on_change=self._on_change_as_table
         )
 
-        # level_checkboxes = ft.Row([
-        #     ft.Column(controls1),
-        #     ft.Column(controls2)
-        # ])
-
-        level_checkboxes = ft.Row(
-            [ft.Text(get_text("select_log_levels")), ft.Row(controls1), ft.Row(controls2)]
+        self._level_selector = LogLevelSelector(
+            on_change=self._on_change_log_level_in_transform_dialog
         )
 
         self._transform_dialog_title = ft.Text()
@@ -254,7 +237,9 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             selectable=True,
         )
 
-        self._search_component = SearchComponent(on_change=self._on_layout_search)
+        self._search_component = SearchComponent(
+            on_change=self._on_layout_search, main_app=self
+        )
 
         self._transform_dlg = ft.AlertDialog(
             modal=True,
@@ -265,7 +250,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                     [
                         # filter_row,
                         self._search_component,
-                        level_checkboxes,
+                        self._level_selector,
                         # SCROLLBAR DEL
                         ft.Container(
                             # width=600,
@@ -280,8 +265,6 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                         ),
                         ft.Divider(),
                         # FAST DEL
-                        # ft.Text(get_text("select_log_level")),
-                        # level_checkboxes,
                         ft.Row(
                             [
                                 self._transform_dialog_with_filter,
@@ -292,11 +275,15 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                         ft.Row(
                             [
                                 ft.Button(
-                                    get_text("open_log"),
-                                    on_click=self._on_ok_create_transform_dialog_log,
+                                    self.language.get_text("open_log"),
+                                    on_click=self._on_create_transform_dialog_log,
                                 ),
                                 ft.Button(
-                                    get_text("close"),
+                                    self.language.get_text("open_log_directory"),
+                                    on_click=self._on_open_transform_dialog_log_directory,
+                                ),
+                                ft.Button(
+                                    self.language.get_text("close"),
                                     on_click=self._on_close_transform_dialog,
                                 ),
                             ],
@@ -308,7 +295,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             ),
         )
 
-    def _on_change_log_level_in_transform_dialog(self, e: ft.Event[ft.Checkbox]):
+    def _on_change_log_level_in_transform_dialog(self, levels):
         self._on_layout_search()
 
     @staticmethod
@@ -329,9 +316,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
 
     def _get_filter_transformer_dialog_logs(self) -> list[str]:
         # Filter logs based on log level
-        log_levels = [
-            level for level, wid in self._alert_transform_levels.items() if wid.value
-        ]
+        log_levels = self._level_selector.levels
         transformer_dialog_logs = [
             msg
             for msg in self._current_transformer_dialog_logs
@@ -342,33 +327,28 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
     def _on_layout_search(self, text: str = "") -> None:
         if not self._search_component.text:
             self._transform_dialog_text.value = "\n".join(
-                # self._current_transformer_dialog_logs
                 self._get_filter_transformer_dialog_logs()
             )
             self._transform_dialog_text.update()
             return
         filtered_logs = self._search_component.filter_list(
-            # self._current_transformer_dialog_logs
             self._get_filter_transformer_dialog_logs()
         )
         self._transform_dialog_text.value = "\n".join(filtered_logs)
         self._transform_dialog_text.update()
 
-    def _on_ok_create_transform_dialog_log(self, e):
+    def _on_create_transform_dialog_log(self, e):
         if not self._current_workflow:
             return
         create_xlsx_report(
-            log_filter=dict(
-                levels=[
-                    str(level)
-                    for level, wid in self._alert_transform_levels.items()
-                    if wid.value
-                ]
-            ),
+            log_filter=dict(levels=self._level_selector.levels),
             open_file=True,
             with_filter=self._transform_dialog_with_filter.value,
             as_table=self._transform_dialog_as_table.value,
         )
+
+    def _on_open_transform_dialog_log_directory(self, *args):
+        sharkadm_utils.open_file_or_directory(sharkadm_utils.get_export_directory())
 
     def _on_close_transform_dialog(self, e=None):
         self._transform_dlg.open = False
@@ -387,18 +367,17 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         )
 
     def _build_components(self):
-        print("BUILDING")
         self._build_general_dialog()
         self._build_transform_dialog()
 
         self.config_component = ConfigComponent(
             state=str(self.state.state),
             source_type=str(self.source_type.source),
+            main_app=self,
         )
 
         self._info_text = ft.Text(
-            get_text("default_info_text"),
-            # "Det här är infotext....som kommer att ändras när det händer något...",
+            self.language.get_text("default_info_text"),
             bgcolor="gray",
         )
 
@@ -412,17 +391,13 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             ]
         )
 
-        self.frame_log = FrameLog()
+        self.frame_log = FrameLog(main_app=self)
         self._frame_create_single_zip = FrameCreateSingleZip(
             visible=self.source_type.source == SourceType.SINGLE, main_app=self
         )
         self._frame_create_multiple_zip = FrameCreateMultipleZip(
             visible=self.source_type.source == SourceType.MULTIPLE, main_app=self
         )
-        # if hasattr(self, "_frame_create_single_zip"):
-        #     # print(f"2: {self._frame_create_single_zip=}")
-        #     print(f"2: {id(self._frame_create_single_zip)=}")
-
         self._frame_create_single_zip.state = self.state
         self._frame_create_multiple_zip.state = self.state
 
@@ -434,24 +409,21 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
                 controls=[
                     ft.TabBar(
                         tabs=[
-                            ft.Tab(label=get_text("create_zip_package")),
-                            ft.Tab(label=get_text("log"), icon=ft.Icons.EDIT_DOCUMENT),
+                            ft.Tab(label=self.language.get_text("create_zip_package")),
+                            ft.Tab(
+                                label=self.language.get_text("log"),
+                                icon=ft.Icons.EDIT_DOCUMENT,
+                            ),
                         ]
                     ),
                     ft.TabBarView(
                         expand=True,
                         controls=[
-                            # ft.Container(
-                            #     expand=True,
-                            #     content=self._frame_create_single_zip,
-                            # ),
                             ft.Container(
-                                #     alignment=ft.Alignment.CENTER,
                                 content=ft.Column(
                                     [
                                         self._frame_create_single_zip,
                                         self._frame_create_multiple_zip,
-                                        # self._frame_create_multiple_zip,
                                     ],
                                     expand=True,
                                 ),
@@ -509,15 +481,16 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._progress_bar.update()
 
     def _on_show_dialog(self, data: dict) -> None:
-        title = data.get("title", get_text("important_info"))
+        title = data.get("title", self.language.get_text("important_info"))
         msg = data.get("msg", "Här borde det stå något annat förmodligen...")
+        print(f"{msg=}")
         self._on_show_info(msg)
         self._dialog_title.value = title
         self._dialog_text.value = msg
         self._open_dlg(self._dlg)
 
     def _on_show_transform_dialog(self, data: dict) -> None:
-        title = data.get("title", get_text("important_info"))
+        title = data.get("title", self.language.get_text("important_info"))
         # msg = data.get("msg", "Här borde det stå något annat förmodligen...")
         self._current_transformer_dialog_logs = data.get("logs", [])
         self._current_transformer_dialog_quick_search = dict()
@@ -533,7 +506,7 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
     def _on_show_info(self, msg: str = "") -> None:
         self._add_to_log_file(msg)
         self.frame_log.add_text(msg)
-        self._info_text.value = msg
+        self._info_text.value = msg.replace("\n", " ")
         self._info_text.update()
 
     def _on_show_on_log_frame(self, msg: str = "") -> None:
@@ -546,6 +519,8 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
         self._on_show_info(text)
 
     def _open_dlg(self, dlg, *args):
+        if dlg.open:
+            return
         self.page.show_dialog(dlg)
 
     def _on_close_dialog(self, *args):
@@ -563,8 +538,5 @@ class ZipArchiveCreatorGUI(app_state.AppState, app_source.AppSource):
             page_window_width=self.page.window.width,
             page_window_height=self.page.window.height,
         )
-        # print("_save_layout")
-        # info = utils.get_current_monitor(self.page)
-        # print(info)
-        self._frame_create_single_zip.update_layout()
+        # self._frame_create_single_zip.update_layout()
         self._frame_create_multiple_zip.update_layout()
