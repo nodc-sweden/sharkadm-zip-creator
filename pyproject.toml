@@ -1,6 +1,6 @@
 [project]
 name = "sharkadm-zip-creator"
-version = "0.1.0"
+version = "0.1.1"
 description = "Flet GUI for creating zip packages for SHARK"
 authors = [
     {name = "Magnus Wenzer", email = "magnus.wenzer@smhi.se"},
@@ -10,12 +10,12 @@ dependencies = [
     "flet-desktop>=0.85.3",
     "polars==1.31.0",
     "screeninfo>=0.8.1",
-    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@v4.1.0",
+    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@v4.1.1",
     "nodc-station @ git+https://github.com/nodc-sweden/nodc-station.git@v2.1.0",
     "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes.git@v3.0.0",
     "nodc-worms @ git+https://github.com/nodc-sweden/nodc-worms.git@v1.0.0",
     "nodc-bvol @ git+https://github.com/nodc-sweden/nodc-bvol.git@v0.2.0",
-    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git@v0.1.0",
+    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git@v0.1.1",
     "nodc-geography @ git+https://github.com/nodc-sweden/nodc-geography.git@v2.0.1",
     "nodc-dyntaxa @ git+https://github.com/nodc-sweden/nodc-dyntaxa.git@v0.2.0",
 ]
@@ -33,6 +33,7 @@ dev = [
     "ruff>=0.13.1",
     "pre-commit>=4.3.0",
     "freezegun>=1.5.4",
+    "nodc-occurrence-id",
 ]
 
 [tool.ruff]
@@ -54,16 +55,6 @@ per-file-ignores."__init__.py" = ["F401"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
-
-#[tool.uv.sources]
-#sharkadm = { git = "https://github.com/nodc-sweden/SHARKadm.git", rev = "v4.1.0" }
-#nodc-station = { git = "https://github.com/nodc-sweden/nodc-station.git", rev = "v2.1.0" }
-#nodc-codes = { git = "https://github.com/nodc-sweden/nodc-codes.git", rev = "v3.0.0" }
-#nodc-bvol = { git = "https://github.com/nodc-sweden/nodc-bvol.git", rev = "v0.2.0" }
-#nodc-worms = { git = "https://github.com/nodc-sweden/nodc-worms.git", rev = "v1.0.0" }
-#nodc-occurrence-id = { git = "https://github.com/nodc-sweden/nodc-occurrence-id.git", rev = "v0.1.0" }
-#nodc-geography = { git = "https://github.com/nodc-sweden/nodc-geography.git", rev = "v2.0.1" }
-#nodc-dyntaxa = { git = "https://github.com/nodc-sweden/nodc-dyntaxa.git", rev = "v0.2.0" }
 
 
 

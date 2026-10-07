@@ -450,8 +450,8 @@ dependencies = [
 
 [[package]]
 name = "nodc-occurrence-id"
-version = "0.1.0"
-source = { git = "https://github.com/nodc-sweden/nodc-occurrence-id.git?rev=v0.1.0#2f2df9078abc28fc6e58f658aa220ddb3db74230" }
+version = "0.1.1"
+source = { git = "https://github.com/nodc-sweden/nodc-occurrence-id.git?rev=v0.1.1#9c0c3aeb209de2a698fb2218de30d1fddc26cd58" }
 dependencies = [
     { name = "connectorx" },
     { name = "nodc-config" },
@@ -975,8 +975,8 @@ wheels = [
 
 [[package]]
 name = "sharkadm"
-version = "4.1.0"
-source = { git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.0#9a253a4133dbf08932f6dd9732ef8b62caad9224" }
+version = "4.1.1"
+source = { git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.1#b8c9966da257ae162b6faf7e84814a284f8993a5" }
 dependencies = [
     { name = "fastexcel" },
     { name = "geopandas" },
@@ -998,7 +998,7 @@ dependencies = [
 
 [[package]]
 name = "sharkadm-zip-creator"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "flet" },
@@ -1018,6 +1018,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "freezegun" },
+    { name = "nodc-occurrence-id" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
@@ -1031,17 +1032,18 @@ requires-dist = [
     { name = "nodc-codes", git = "https://github.com/nodc-sweden/nodc-codes.git?rev=v3.0.0" },
     { name = "nodc-dyntaxa", git = "https://github.com/nodc-sweden/nodc-dyntaxa.git?rev=v0.2.0" },
     { name = "nodc-geography", git = "https://github.com/nodc-sweden/nodc-geography.git?rev=v2.0.1" },
-    { name = "nodc-occurrence-id", git = "https://github.com/nodc-sweden/nodc-occurrence-id.git?rev=v0.1.0" },
+    { name = "nodc-occurrence-id", git = "https://github.com/nodc-sweden/nodc-occurrence-id.git?rev=v0.1.1" },
     { name = "nodc-station", git = "https://github.com/nodc-sweden/nodc-station.git?rev=v2.1.0" },
     { name = "nodc-worms", git = "https://github.com/nodc-sweden/nodc-worms.git?rev=v1.0.0" },
     { name = "polars", specifier = "==1.31.0" },
     { name = "screeninfo", specifier = ">=0.8.1" },
-    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.0" },
+    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.1" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "freezegun", specifier = ">=1.5.4" },
+    { name = "nodc-occurrence-id" },
     { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "ruff", specifier = ">=0.13.1" },
