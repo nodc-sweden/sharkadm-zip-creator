@@ -1,6 +1,6 @@
 [project]
 name = "sharkadm-zip-creator"
-version = "0.1.1"
+version = "0.1.2"
 description = "Flet GUI for creating zip packages for SHARK"
 authors = [
     {name = "Magnus Wenzer", email = "magnus.wenzer@smhi.se"},
@@ -10,7 +10,7 @@ dependencies = [
     "flet-desktop>=0.85.3",
     "polars==1.31.0",
     "screeninfo>=0.8.1",
-    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@v4.1.1",
+    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@v4.1.2",
     "nodc-station @ git+https://github.com/nodc-sweden/nodc-station.git@v2.1.0",
     "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes.git@v3.0.0",
     "nodc-worms @ git+https://github.com/nodc-sweden/nodc-worms.git@v1.0.0",

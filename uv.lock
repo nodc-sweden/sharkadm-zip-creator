@@ -975,8 +975,8 @@ wheels = [
 
 [[package]]
 name = "sharkadm"
-version = "4.1.1"
-source = { git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.1#b8c9966da257ae162b6faf7e84814a284f8993a5" }
+version = "4.1.2"
+source = { git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.2#90c33e014f3383160d52af173aa8a885ba558bec" }
 dependencies = [
     { name = "fastexcel" },
     { name = "geopandas" },
@@ -998,7 +998,7 @@ dependencies = [
 
 [[package]]
 name = "sharkadm-zip-creator"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "flet" },
@@ -1037,7 +1037,7 @@ requires-dist = [
     { name = "nodc-worms", git = "https://github.com/nodc-sweden/nodc-worms.git?rev=v1.0.0" },
     { name = "polars", specifier = "==1.31.0" },
     { name = "screeninfo", specifier = ">=0.8.1" },
-    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.1" },
+    { name = "sharkadm", git = "https://github.com/nodc-sweden/SHARKadm.git?rev=v4.1.2" },
 ]
 
 [package.metadata.requires-dev]
