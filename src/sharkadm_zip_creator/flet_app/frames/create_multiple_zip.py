@@ -306,7 +306,7 @@ class FrameCreateMultipleZip(ft.Column):
             event.post_event(
                 event.Events.SHOW_DIALOG,
                 dict(
-                    title="Something whent wrong when trying to show result",
+                    title="Something went wrong when trying to show result",
                     msg=str(traceback.format_exc()),
                 ),
             )

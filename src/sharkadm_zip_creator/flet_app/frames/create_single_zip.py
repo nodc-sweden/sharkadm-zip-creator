@@ -264,18 +264,16 @@ class FrameCreateSingleZip(ft.Container):
 
         self._open_transform_dialog()
         self.main_app.reset_progress()
-        # saves.config_saves.export_saves()
         self.save_export_options()
 
     def _open_transform_dialog(self):
         data = dict()
         if self.error:
             data["title"] = self.get_text("something_went_wrong")
-
             data["msg"] = str(self.error)
         elif self.result:
             data["title"] = self.get_text("something_maybe_went_wrong")
-            data["msg"] = str(self.result)
+            data["msg"] = self.result.msg
         else:
             if self._transformation_logs:
                 data["title"] = self.get_text("all_done_but")
