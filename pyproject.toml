@@ -1,6 +1,6 @@
 [project]
 name = "sharkadm-zip-creator"
-version = "0.1.2"
+version = "0.2.0"
 description = "Flet GUI for creating zip packages for SHARK"
 authors = [
     {name = "Magnus Wenzer", email = "magnus.wenzer@smhi.se"},
@@ -10,12 +10,14 @@ dependencies = [
     "flet-desktop>=0.85.3",
     "polars==1.31.0",
     "screeninfo>=0.8.1",
-    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@v4.1.2",
+#    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@v4.1.2",
+    "sharkadm @ git+https://github.com/nodc-sweden/SHARKadm.git@3c5ffc5",
     "nodc-station @ git+https://github.com/nodc-sweden/nodc-station.git@v2.1.0",
     "nodc-codes @ git+https://github.com/nodc-sweden/nodc-codes.git@v3.0.0",
     "nodc-worms @ git+https://github.com/nodc-sweden/nodc-worms.git@v1.0.0",
     "nodc-bvol @ git+https://github.com/nodc-sweden/nodc-bvol.git@v0.2.0",
-    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git@v0.1.1",
+#    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git@v0.1.1",
+    "nodc-occurrence-id @ git+https://github.com/nodc-sweden/nodc-occurrence-id.git@f4417bb",
     "nodc-geography @ git+https://github.com/nodc-sweden/nodc-geography.git@v2.0.1",
     "nodc-dyntaxa @ git+https://github.com/nodc-sweden/nodc-dyntaxa.git@v0.2.0",
 ]
@@ -33,7 +35,6 @@ dev = [
     "ruff>=0.13.1",
     "pre-commit>=4.3.0",
     "freezegun>=1.5.4",
-    "nodc-occurrence-id",
 ]
 
 [tool.ruff]
