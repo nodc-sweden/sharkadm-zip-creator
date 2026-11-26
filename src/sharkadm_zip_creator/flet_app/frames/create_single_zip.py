@@ -14,10 +14,17 @@ from sharkadm_zip_creator.flet_app.components import (
     SingleDataSourceComponent,
     WorkflowOptionsComponent,
 )
+from sharkadm_zip_creator.flet_app.components.feedback_info import FeedbackInfo
 from sharkadm_zip_creator.flet_app.components.operators_list import (
     ListOperatorsComponent,
 )
 from sharkadm_zip_creator.flet_app.saves import user_saves
+
+occurrence_id_event = None
+try:
+    from nodc_occurrence_id import event as occurrence_id_event
+except ImportError:
+    pass
 
 
 # @ft.control
@@ -38,6 +45,11 @@ class FrameCreateSingleZip(ft.Container):
             sharkadm_event.Events.LOG_VALIDATION, self._on_log_transformation
         )
 
+        if occurrence_id_event:
+            occurrence_id_event.subscribe(
+                occurrence_id_event.Events.INFO, self._on_occurrence_id_info
+            )
+
         self._workflow: workflow.SHARKadmWorkflow | None = None
         self._workflow_config_path = ft.Text()
         config_path_row = ft.Row(
@@ -55,6 +67,10 @@ class FrameCreateSingleZip(ft.Container):
         self.post_export_options_component = PostWorkflowExportOptionsComponent(
             main_app=self.main_app
         )
+        self.feedback_info = FeedbackInfo(main_app=self.main_app)
+        if not any([occurrence_id_event]):
+            self.feedback_info.visible = False
+
         self.button_create_zip = ft.Button(
             self.get_text("create_zip_package"), on_click=self.on_create_zip
         )
@@ -82,6 +98,10 @@ class FrameCreateSingleZip(ft.Container):
                 ),
                 ft.Container(
                     content=self.post_export_options_component,
+                    expand=1,
+                ),
+                ft.Container(
+                    content=self.feedback_info,
                     expand=1,
                 ),
             ],
@@ -153,6 +173,12 @@ class FrameCreateSingleZip(ft.Container):
         self._transformation_logs.append(f"{level}: {msg}")
         # self._transformation_logs.append(f"{level}: {msg}")
 
+    def _on_occurrence_id_info(self, info) -> None:
+        self.feedback_info.set_text(
+            "\n".join(info.get("data", [])), label=info.get("msg", "")
+        )
+        self.page.show_dialog(ft.SnackBar(f"Occurrence ID: {info.get('msg', '')}"))
+
     def _on_change_source(self, data: dict):
         try:
             self.button_open_result.visible = False
@@ -164,6 +190,7 @@ class FrameCreateSingleZip(ft.Container):
             )
             wflow.set_data_sources(path)
             self._set_workflow(wflow)
+            self.feedback_info.reset()
             event.post_event(event.Events.SHOW_INFO, "Workflow loaded")
         except Exception:
             event.post_event(
@@ -173,7 +200,6 @@ class FrameCreateSingleZip(ft.Container):
                     msg=str(traceback.format_exc()),
                 ),
             )
-            raise
 
     def _on_change_show_operators_info_switch(self, e: ft.Event[ft.Switch]):
         if self._show_operators_info_switch.value:
@@ -190,6 +216,10 @@ class FrameCreateSingleZip(ft.Container):
                     content=self.post_export_options_component,
                     expand=1,
                 ),
+                ft.Container(
+                    content=self.feedback_info,
+                    expand=1,
+                ),
             ]
         else:
             self._container_row.controls = [
@@ -199,6 +229,10 @@ class FrameCreateSingleZip(ft.Container):
                 ),
                 ft.Container(
                     content=self.post_export_options_component,
+                    expand=1,
+                ),
+                ft.Container(
+                    content=self.feedback_info,
                     expand=1,
                 ),
             ]
@@ -317,6 +351,7 @@ class FrameCreateSingleZip(ft.Container):
             )
             return
         try:
+            self.feedback_info.reset()
             self._disable()
             event.post_event(event.Events.ON_START_WORKFLOW, None)
             self._start_workflow()

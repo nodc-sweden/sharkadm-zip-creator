@@ -10,8 +10,6 @@ from sharkadm_zip_creator.flet_app.components import operators
 
 @dataclass
 class PostWorkflowExportOptionsComponent(ft.Container):
-    label: str = "export_options_after_zip_creation"
-    # label: str = get_text("export_options_after_zip_creation")
     color: str = constants.COLOR_EXPORT_OPTIONS_SECONDARY
     expand: bool = True
     main_app: Any = None
@@ -22,6 +20,9 @@ class PostWorkflowExportOptionsComponent(ft.Container):
         event.subscribe(event.Events.ON_START_WORKFLOW, self.disable)
         event.subscribe(event.Events.ON_LOAD_SOURCE, self.disable)
 
+        self._label: str = self.main_app.language.get_text(
+            "export_options_after_zip_creation"
+        )
         self._lv_color = ft.Colors.GREY_500
 
         self.lv = ft.ListView(
@@ -67,7 +68,7 @@ class PostWorkflowExportOptionsComponent(ft.Container):
     ) -> None:
         self.reset()
         wid_list = [
-            ft.Text(self.label, color="black"),
+            ft.Text(self._label, color="black"),
             ft.Divider(height=9, thickness=3),
         ]
         # for exp in wflow.exporters:

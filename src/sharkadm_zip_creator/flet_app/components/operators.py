@@ -19,7 +19,6 @@ class OperatorCard(ft.Card):
         self.operator_widgets = {}
 
         name = self.main_app.language.get_text(self.operator["name"])
-        print(f"{name=}")
         self._main_cb = ft.Checkbox(name, on_change=self._on_change_main)
         if not self.allow_turn_off:
             self._main_cb.disabled = True
@@ -39,6 +38,16 @@ class OperatorCard(ft.Card):
                     label=self.main_app.language.get_text(key),
                     value=value,
                     input_filter=ft.NumbersOnlyInputFilter(),
+                )
+            elif type(value) is list:
+                wid = ft.TextField(
+                    label=self.main_app.language.get_text(key),
+                    hint_text=self.main_app.language.get_text("one_item_per_line"),
+                    multiline=True,
+                    min_lines=5,
+                    max_lines=12,
+                    expand=True,
+                    color=ft.Colors.RED,
                 )
             else:
                 wid = ft.Text(self.main_app.language.get_text(key))
@@ -72,6 +81,8 @@ class OperatorCard(ft.Card):
                 and isinstance(wid.input_filter, ft.NumbersOnlyInputFilter)
             ):
                 value = int(value)
+            if isinstance(wid, ft.TextField) and wid.multiline:
+                value = [item.strip() for item in value.splitlines() if item.strip()]
             info[key] = value
         return info
 
